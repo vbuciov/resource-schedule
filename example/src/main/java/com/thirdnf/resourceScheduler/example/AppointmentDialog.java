@@ -23,8 +23,8 @@ import org.joda.time.*;
 @SuppressWarnings({"FieldCanBeLocal"})
 public class AppointmentDialog extends JDialog
 {
-    private static final LocalTime StartTime = new LocalTime(6, 0, 0);
-    private static final LocalTime EndTime   = new LocalTime(18, 0, 0);
+    private static final LocalTime StartTime = new LocalTime(0, 0, 0);
+    private static final LocalTime EndTime   = new LocalTime(23, 30, 0);
     private static final Duration  Increment = Duration.standardMinutes(15);
     private LocalDate _date;
     private ExampleAppointment _appointment;

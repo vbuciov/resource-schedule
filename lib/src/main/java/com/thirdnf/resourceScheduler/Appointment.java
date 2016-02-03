@@ -28,6 +28,8 @@ public interface Appointment
      */
     @NotNull
     LocalDateTime getDateTime();
+    
+    void setDateTime(@NotNull LocalDateTime value);
 
 
     /**
@@ -38,6 +40,9 @@ public interface Appointment
      */
     @Nullable
     Resource getResource();
+    
+    
+    void setResource(Resource value);
 
 
     /**
@@ -47,4 +52,7 @@ public interface Appointment
      */
     @NotNull
     Duration getDuration();
+    
+    void setDuration(Duration value);
+
 }

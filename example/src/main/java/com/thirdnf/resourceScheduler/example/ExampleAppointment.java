@@ -16,7 +16,7 @@ import org.joda.time.LocalTime;
 public class ExampleAppointment implements Appointment
 {
     private ExampleCategory _category;
-    private ExampleResource _resource;
+    private Resource _resource;
     private String _title;
     private LocalDateTime _dateTime;
     private Duration _duration;
@@ -113,5 +113,10 @@ public class ExampleAppointment implements Appointment
         appointment.setDuration(Duration.standardMinutes(minutes));
 
         return appointment;
+    }
+
+    public void setResource(Resource value)
+    {
+        _resource = value;
     }
 }

@@ -18,7 +18,13 @@ import java.awt.*;
  */
 public class BasicAppointmentComponent extends AbstractAppointmentComponent
 {
-    protected static final Color BackgroundColor = new Color(9, 171, 246, 200);
+    protected static Color BackgroundColor;
+    int arc = 10;
+    
+    static
+    {
+        BackgroundColor = new Color(9, 171, 246, 200);
+    }
 
     /**
      * Constructor given an appointment to wrap.
@@ -31,6 +37,7 @@ public class BasicAppointmentComponent extends AbstractAppointmentComponent
 
         // The preferred size is pretty much just ignored for right now.
         setPreferredSize(new Dimension(100, 100));
+        setBounds(50, 50, 200, 150);
 
         // Default our background color to blue
         setBackground(BackgroundColor);
@@ -41,33 +48,29 @@ public class BasicAppointmentComponent extends AbstractAppointmentComponent
     protected void paintComponent(Graphics g)
     {
         super.paintComponent(g);
-
         Graphics2D graphics = (Graphics2D)g;
-
         Color oldColor = graphics.getColor();
-
         RenderingHints renderHints = graphics.getRenderingHints();
 
         Insets insets = getInsets();
+        int width = getWidth() /*- insets.left - insets.right*/;
+        int height = getHeight() /*- insets.top - insets.bottom*/;
 
-        int width = getWidth() - insets.left - insets.right;
-        int height = getHeight() - insets.top - insets.bottom;
-
-        // Draw our border
-        int arc = 10;
-
+        // Draw our Component FACE
         graphics.setColor(getBackground());
-        graphics.fillRoundRect(insets.left, insets.top, insets.left+width-1, insets.top+height-1, arc, arc);
+        graphics.fillRoundRect(insets.left, insets.top, width - insets.left, height - insets.top, arc, arc);
 
+        /*
+        The border is drawing by the Border Component.
         graphics.setColor(Color.gray);
-        graphics.drawRoundRect(insets.left, insets.top, insets.left+width-1, insets.top+height-1, arc, arc);
+        graphics.drawRoundRect(insets.left + 1, insets.top + 1, width - insets.left - 1, height - insets.top - 1, arc, arc);*/
 
         FontMetrics fontMetrics = getFontMetrics(getFont());
         int fontHeight = fontMetrics.getHeight() - fontMetrics.getDescent();
 
         graphics.setColor(Color.black);
         graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        graphics.drawString(_appointment.getTitle(), insets.left + 10, insets.top + fontHeight + 2);
+        graphics.drawString(_appointment.getTitle(), insets.left + 2, insets.top + fontHeight + 2);
 
         graphics.setRenderingHints(renderHints);
         graphics.setColor(oldColor);
@@ -83,5 +86,15 @@ public class BasicAppointmentComponent extends AbstractAppointmentComponent
         graphics.fillRect(area.x, area.y, area.width, area.height);
 
         graphics.setColor(oldColor);
+    }
+
+    public int getArc()
+    {
+        return arc;
+    }
+
+    public void setArc(int arc)
+    {
+        this.arc = arc;
     }
 }
