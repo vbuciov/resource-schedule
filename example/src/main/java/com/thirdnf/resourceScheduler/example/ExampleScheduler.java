@@ -14,11 +14,11 @@ import com.jgoodies.forms.factories.*;
 import com.jgoodies.forms.layout.CellConstraints;
 import com.jgoodies.forms.layout.FormLayout;
 
-
 import com.thirdnf.resourceScheduler.Appointment;
 import com.thirdnf.resourceScheduler.Resource;
 import com.thirdnf.resourceScheduler.ScheduleListener;
 import com.thirdnf.resourceScheduler.Scheduler;
+import java.awt.event.MouseEvent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joda.time.DateTime;
@@ -43,10 +43,12 @@ import org.joda.time.format.PeriodFormat;
 public class ExampleScheduler extends JFrame
 {
 
-    private final ExampleScheduleModel _model;
-
+    private final JPopupMenu _popupAppointmentMenu;
+    private final JPopupMenu _popupResourceMenu;
     private static final LocalDate Today = new LocalDate();
     private static final LocalDate Tomorrow = Today.plusDays(1);
+
+    private final ExampleScheduleModel bsScheduler;
 
     /**
      * Main entry point. This method is responsible for creating the main window
@@ -70,8 +72,52 @@ public class ExampleScheduler extends JFrame
     public ExampleScheduler()
     {
         initComponents();
-        _model = new ExampleScheduleModel();
-        ExampleComponentFactory componentFactory = new ExampleComponentFactory();
+        bsScheduler = new ExampleScheduleModel();
+        _popupAppointmentMenu = new JPopupMenu();
+        _popupResourceMenu = new JPopupMenu();
+        JMenuItem editItem = new JMenuItem("Edit");
+        editItem.addActionListener(new ActionListener()
+        {
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                handleAppointmentEdit(_scheduler.getSelectedAppointment());
+            }
+        });
+        _popupAppointmentMenu.add(editItem);
+
+        JMenuItem deleteItem = new JMenuItem("Delete");
+        deleteItem.addActionListener(new ActionListener()
+        {
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                bsScheduler.deleteAppointment(_scheduler.getSelectedAppointment());
+            }
+        });
+        _popupAppointmentMenu.add(deleteItem);
+
+        editItem = new JMenuItem("Edit");
+        editItem.addActionListener(new ActionListener()
+        {
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                handleResourceEdit(_scheduler.getSelectedResource());
+            }
+        });
+        _popupResourceMenu.add(editItem);
+
+        deleteItem = new JMenuItem("Delete");
+        deleteItem.addActionListener(new ActionListener()
+        {
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                bsScheduler.deleteResource(_scheduler.getSelectedResource());
+            }
+        });
+        _popupResourceMenu.add(deleteItem);
 
         _scheduler.addScheduleListener(new ScheduleListener()
         {
@@ -80,49 +126,39 @@ public class ExampleScheduler extends JFrame
             {
                 handleAddAppointment(resource, time);
             }
-        });
 
-        componentFactory.setAppointmentListener(new AppointmentListener()
-        {
-            @Override
-            public void handleClick(@NotNull Appointment appointment, int clickCount)
+            public void appointmentMouseClicked(Appointment appointment, MouseEvent e)
             {
-                if (clickCount == 1)
-                    handleAppointmentClick(appointment);
-                else
+                if (e.getClickCount() == 2)
                     handleAppointmentEdit(appointment);
             }
 
-            @Override
-            public void handleDelete(@NotNull Appointment appointment)
+            public void appointmentMousePressed(Appointment appointment, MouseEvent e)
             {
-                _model.deleteAppointment(appointment);
+                //Review for secondary button of mouse
+                if (e.isPopupTrigger())
+                    _popupAppointmentMenu.show(e.getComponent(),
+                                               e.getX(), e.getY());
+                handleAppointmentClick(appointment);
             }
 
-            @Override
-            public void handleEdit(@NotNull Appointment appointment)
+            public void resourceMousePressed(Resource source, MouseEvent e)
             {
-                handleAppointmentEdit(appointment);
-            }
-        });
-
-        componentFactory.setResourceListener(new ResourceListener()
-        {
-            @Override
-            public void handleDelete(@NotNull Resource resource)
-            {
-                _model.deleteResource(resource);
+                 //Review for secondary button of mouse
+                if (e.isPopupTrigger())
+                    _popupResourceMenu.show(e.getComponent(),
+                                            e.getX(), e.getY());
             }
 
-            @Override
-            public void handleEdit(@NotNull Resource resource)
+            public void resourceMouseClicked(Resource source, MouseEvent e)
             {
-                handleResourceEdit(resource);
+                if (e.getClickCount() > 1)
+                    handleResourceEdit(source);
             }
         });
 
-        _scheduler.setComponentFactory(componentFactory);
-        _scheduler.setModel(_model);
+        _scheduler.setComponentFactory(new ExampleComponentFactory());
+        _scheduler.setModel(bsScheduler);
     }
 
     /**
@@ -154,13 +190,13 @@ public class ExampleScheduler extends JFrame
         }
         ExampleAppointment exampleAppointment = (ExampleAppointment) appointment;
 
-        AppointmentDialog dialog = new AppointmentDialog(this, exampleAppointment, _model);
+        AppointmentDialog dialog = new AppointmentDialog(this, exampleAppointment, bsScheduler);
         dialog.setOkayListener(new AppointmentDialog.IOkayListener()
         {
             @Override
             public void handleOkay(@NotNull ExampleAppointment appointment)
             {
-                _model.updateAppointment(appointment);
+                bsScheduler.updateAppointment(appointment);
             }
         });
         dialog.pack();
@@ -183,7 +219,7 @@ public class ExampleScheduler extends JFrame
             @Override
             public void handleOkay(@NotNull ExampleResource resource, int column)
             {
-                _model.updateResource(resource);
+                bsScheduler.updateResource(resource);
             }
         });
         dialog.pack();
@@ -222,7 +258,7 @@ public class ExampleScheduler extends JFrame
             @Override
             public void handleOkay(@NotNull ExampleResource resource, int column)
             {
-                _model.addResource(resource, column);
+                bsScheduler.addResource(resource, column);
             }
         });
         dialog.pack();
@@ -255,13 +291,13 @@ public class ExampleScheduler extends JFrame
     private void handleAddAppointment()
     {
         LocalDate date = _todayRadio.isSelected() ? Today : Tomorrow;
-        AppointmentDialog dialog = new AppointmentDialog(this, date, _model);
+        AppointmentDialog dialog = new AppointmentDialog(this, date, bsScheduler);
         dialog.setOkayListener(new AppointmentDialog.IOkayListener()
         {
             @Override
             public void handleOkay(@NotNull ExampleAppointment appointment)
             {
-                _model.addAppointment(appointment);
+                bsScheduler.addAppointment(appointment);
             }
         });
         dialog.pack();
@@ -270,13 +306,13 @@ public class ExampleScheduler extends JFrame
 
     private void handleAddAppointment(@Nullable Resource resource, @NotNull DateTime dateTime)
     {
-        AppointmentDialog dialog = new AppointmentDialog(this, resource, dateTime, _model);
+        AppointmentDialog dialog = new AppointmentDialog(this, resource, dateTime, bsScheduler);
         dialog.setOkayListener(new AppointmentDialog.IOkayListener()
         {
             @Override
             public void handleOkay(@NotNull ExampleAppointment appointment)
             {
-                _model.addAppointment(appointment);
+                bsScheduler.addAppointment(appointment);
             }
         });
         dialog.pack();
@@ -317,7 +353,6 @@ public class ExampleScheduler extends JFrame
 
         //======== panel2 ========
 //        panel2.setLayout(new BoxLayout(panel2, BoxLayout.X_AXIS));
-
         //---- label1 ----
         label1.setText("Date:");
         panel2.add(label1);

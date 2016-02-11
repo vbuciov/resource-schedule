@@ -3,7 +3,6 @@
  */
 package com.thirdnf.resourceScheduler;
 
-
 import com.thirdnf.resourceScheduler.components.BasicComponentFactory;
 import java.awt.CardLayout;
 import java.awt.Dimension;
@@ -11,6 +10,7 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.LayoutManager;
 import java.awt.Rectangle;
+import java.awt.event.MouseEvent;
 import org.jetbrains.annotations.NotNull;
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
@@ -34,6 +34,7 @@ import javax.swing.JPanel;
         })
 public class Scheduler extends JPanel implements Printable
 {
+
     public static final String NotView = "NotView";
     public static final String DayView = "DayView";
     public static final String WeekView = "WeekView";
@@ -75,6 +76,70 @@ public class Scheduler extends JPanel implements Printable
                     }
                 }
             }
+
+            public void appointmentMouseClicked(Appointment source, MouseEvent e)
+            {
+                // Guaranteed to return a non-null array
+                Object[] listeners = listenerList.getListenerList();
+                // Process the listeners last to first, notifying
+                // those that are interested in this event
+                for (int i = listeners.length - 2; i >= 0; i -= 2)
+                {
+                    //noinspection ObjectEquality
+                    if (listeners[i] == ScheduleListener.class)
+                    {
+                        ((ScheduleListener) listeners[i + 1]).appointmentMouseClicked(source, e);
+                    }
+                }
+            }
+
+            public void appointmentMousePressed(Appointment source, MouseEvent e)
+            {
+                // Guaranteed to return a non-null array
+                Object[] listeners = listenerList.getListenerList();
+                // Process the listeners last to first, notifying
+                // those that are interested in this event
+                for (int i = listeners.length - 2; i >= 0; i -= 2)
+                {
+                    //noinspection ObjectEquality
+                    if (listeners[i] == ScheduleListener.class)
+                    {
+                        ((ScheduleListener) listeners[i + 1]).appointmentMousePressed(source, e);
+                    }
+                }
+            }
+
+            public void resourceMousePressed(Resource source, MouseEvent e)
+            {
+                // Guaranteed to return a non-null array
+                Object[] listeners = listenerList.getListenerList();
+                // Process the listeners last to first, notifying
+                // those that are interested in this event
+                for (int i = listeners.length - 2; i >= 0; i -= 2)
+                {
+                    //noinspection ObjectEquality
+                    if (listeners[i] == ScheduleListener.class)
+                    {
+                        ((ScheduleListener) listeners[i + 1]).resourceMousePressed(source, e);
+                    }
+                }
+            }
+
+            public void resourceMouseClicked(Resource source, MouseEvent e)
+            {
+                  // Guaranteed to return a non-null array
+                Object[] listeners = listenerList.getListenerList();
+                // Process the listeners last to first, notifying
+                // those that are interested in this event
+                for (int i = listeners.length - 2; i >= 0; i -= 2)
+                {
+                    //noinspection ObjectEquality
+                    if (listeners[i] == ScheduleListener.class)
+                    {
+                        ((ScheduleListener) listeners[i + 1]).resourceMouseClicked(source, e);
+                    }
+                }
+            }
         });
 
     }
@@ -93,6 +158,26 @@ public class Scheduler extends JPanel implements Printable
     public ScheduleModel getModel()
     {
         return currentScheduleView.getModel();
+    }
+
+    /**
+     * Returns current selected Appointment
+     *
+     * @return the current
+     */
+    public Appointment getSelectedAppointment()
+    {
+        return currentScheduleView.getSelectedAppointment();
+    }
+
+    /**
+     * Returns current selected Resource
+     *
+     * @return the current
+     */
+    public Resource getSelectedResource()
+    {
+        return currentScheduleView.getSelectedResource();
     }
 
     /**
@@ -167,9 +252,9 @@ public class Scheduler extends JPanel implements Printable
         // tell the caller that this page is part of the printed document
         return PAGE_EXISTS;
     }
-    
+
     @Override
-    public LayoutManager getLayout ()
+    public LayoutManager getLayout()
     {
         return currentScheduleView.getLayout();
     }

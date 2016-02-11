@@ -23,6 +23,7 @@ import java.awt.Component;
 import java.awt.Graphics2D;
 import java.awt.LayoutManager;
 import java.awt.Rectangle;
+import java.awt.event.MouseListener;
 import javax.swing.JPanel;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -32,10 +33,10 @@ import org.joda.time.LocalDate;
  *
  * @author Victor Manuel Bucio Vargas - vbuciov@gmail.com
  */
-public abstract class ScheduleView extends JPanel implements ScheduleModelListener
+public abstract class ScheduleView extends JPanel implements ScheduleModelListener, MouseListener
 {
-
     protected ScheduleModel _model;
+    protected ScheduleListener mouseDelegateListener = null;
     private BasicComponentFactory _componentFactory;
 
     //--------------------------------------------------------------------
@@ -44,6 +45,22 @@ public abstract class ScheduleView extends JPanel implements ScheduleModelListen
         super(null); //Whiout Layout
         _componentFactory = new BasicComponentFactory();
         _model = null;
+    }
+    
+        //--------------------------------------------------------------------
+    /**
+     * Add a schedule listener to be notified when a user clicks anywhere in the
+     * panel which is not on an appointment or resource. The values sent are the
+     * "time" location of the event and the resource column. From this the
+     * listener could pull up a dialog box and ask to add an appointment if they
+     * wanted to.
+     *
+     * @param scheduleListener (not null) the listener to be notified on an
+     * appointment click.
+     */
+    public void setScheduleListener(@NotNull ScheduleListener scheduleListener)
+    {
+        mouseDelegateListener = scheduleListener;
     }
 
     //--------------------------------------------------------------------
@@ -161,6 +178,7 @@ public abstract class ScheduleView extends JPanel implements ScheduleModelListen
 
         // Wrap the resource in a component
         AbstractResourceComponent wrapResource = _componentFactory.makeResourceComponent(resource);
+        wrapResource.setInputListener(this);
 
         add(wrapResource, new Integer(index));
     }
@@ -181,6 +199,7 @@ public abstract class ScheduleView extends JPanel implements ScheduleModelListen
 
         // Wrap the resource in a component
         AbstractResourceComponent wrapResource = _componentFactory.makeResourceComponent(resource);
+        wrapResource.setInputListener(this);
 
         add(wrapResource, new Integer(index));
 
@@ -198,6 +217,7 @@ public abstract class ScheduleView extends JPanel implements ScheduleModelListen
     private void addWrapperAppointment(@NotNull Appointment appointment)
     {
         AbstractAppointmentComponent wrappAppointment = _componentFactory.makeAppointmentComponent(appointment);
+        wrappAppointment.setInputListener(this);
 
         add(wrappAppointment);
     }
@@ -213,6 +233,7 @@ public abstract class ScheduleView extends JPanel implements ScheduleModelListen
     private AbstractAppointmentComponent addWrapperAndGetAppointment(@NotNull Appointment appointment)
     {
         AbstractAppointmentComponent wrappAppointment = _componentFactory.makeAppointmentComponent(appointment);
+        wrappAppointment.setInputListener(this);
 
         add(wrappAppointment);
 
@@ -415,18 +436,31 @@ public abstract class ScheduleView extends JPanel implements ScheduleModelListen
     //--------------------------------------------------------------------
     private void onAppointmentUpdated(ScheduleModelEvent e)
     {
+        Appointment actual;
+        boolean repaintAll = false;
         for (int i = e.getFirtIndex(); i <= e.getLastIndex(); i++)
         {
-            Component component = getAppointmentComponent(_model.getAppointmentAt(i));
+            actual = _model.getAppointmentAt(i);
+            Component component = getAppointmentComponent(actual);
             if (component != null)
-                component.repaint();
+            {
+                if (actual.getDateTime().toLocalDate().isEqual(_model.getCurrentDate()))
+                    component.repaint();
+
+                else
+                {
+                    repaintAll = true;
+                    remove(component);
+                }
+            }
         }
 
         // The appointment may have moved so re-layout
         revalidate();
 
         // Repaint to remove the old one.
-        // repaint();
+        if (repaintAll)
+            repaint();
     }
 
     //--------------------------------------------------------------------
@@ -448,5 +482,11 @@ public abstract class ScheduleView extends JPanel implements ScheduleModelListen
 
     //--------------------------------------------------------------------
     abstract LayoutManager instanceNewLayout(ScheduleModel model);
+    
+    //--------------------------------------------------------------------
+    abstract Appointment getSelectedAppointment();
+    
+     //--------------------------------------------------------------------
+    abstract Resource getSelectedResource();
 
 }

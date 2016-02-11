@@ -6,11 +6,14 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 
 
 @SuppressWarnings({"UnusedDeclaration"})
-public abstract class AbstractResourceComponent extends JComponent
+public abstract class AbstractResourceComponent extends JComponent implements MouseListener 
 {
+    private MouseListener inputListener;
     // The resource this component is wrapping.
     protected final Resource _resource;
 
@@ -28,6 +31,7 @@ public abstract class AbstractResourceComponent extends JComponent
     protected AbstractResourceComponent(@NotNull Resource resource)
     {
         _resource = resource;
+        addMouseListener(this);
     }
 
 
@@ -72,4 +76,34 @@ public abstract class AbstractResourceComponent extends JComponent
      * @param area (not null) Area for printing
      */
     public abstract void print(@NotNull Graphics2D graphics, Rectangle area);
+
+    public final void mouseClicked(MouseEvent e)
+    {
+       inputListener.mouseClicked(e);
+    }
+
+    public final void mousePressed(MouseEvent e)
+    {
+       inputListener.mousePressed(e);
+    }
+
+    public final void mouseReleased(MouseEvent e)
+    {
+       //inputListener.mouseReleased(e);
+    }
+
+    public final void mouseEntered(MouseEvent e)
+    {
+       inputListener.mouseEntered(e);
+    }
+
+    public final void mouseExited(MouseEvent e)
+    {
+       inputListener.mouseExited(e);
+    }
+
+    public final void setInputListener(MouseListener inputListener)
+    {
+        this.inputListener = inputListener;
+    }
 }

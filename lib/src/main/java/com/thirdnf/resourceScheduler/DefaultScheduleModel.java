@@ -127,18 +127,23 @@ public class DefaultScheduleModel extends AbstractScheduleModel
     public void deleteResource(@NotNull Resource resource)
     {
         int index = Resources.indexOf(resource);
-        Resources.remove(index);
+       
+        //First remove the wrapper component
         fireResourcesRemoved(index);
+        
+         Resources.remove(index);
     }
 
     //--------------------------------------------------------------------
     public void deleteAppointment(@NotNull Appointment appointment)
     {
         int index = Appointments.indexOf(appointment);
-        // Remove it from our list
-        Appointments.remove(index);
-        // Let any listeners know we have removed this appointment.
+       
+         //First remove the wrapper component
         fireAppointmentsRemoved(index);
+        
+         // Remove it from our list
+        Appointments.remove(index);
     }
     
     //--------------------------------------------------------------------

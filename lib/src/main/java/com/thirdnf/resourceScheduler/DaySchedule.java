@@ -1,5 +1,7 @@
 package com.thirdnf.resourceScheduler;
 
+import com.thirdnf.resourceScheduler.components.AbstractAppointmentComponent;
+import com.thirdnf.resourceScheduler.components.AbstractResourceComponent;
 import java.awt.Color;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
@@ -7,10 +9,8 @@ import java.awt.Graphics2D;
 import java.awt.Insets;
 import java.awt.LayoutManager;
 import java.awt.RenderingHints;
-import org.jetbrains.annotations.NotNull;
 
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
 import java.awt.geom.Rectangle2D;
 import java.util.Iterator;
 import javax.swing.BorderFactory;
@@ -30,11 +30,11 @@ import org.joda.time.DateTime;
  *
  * @author Joshua Gerth - jgerth@thirdnf.com
  */
-public class DaySchedule extends ScheduleView implements MouseListener
+public class DaySchedule extends ScheduleView
 {
-
+    private Appointment selectedAppointment;
+    private Resource selectedResource;
     private final Duration _increments;
-    private ScheduleListener mouseDelegateListener = null;
 
     //--------------------------------------------------------------------
     /**
@@ -48,22 +48,6 @@ public class DaySchedule extends ScheduleView implements MouseListener
         setOpaque(true);
         setBorder(BorderFactory.createEtchedBorder());
         addMouseListener(this);
-    }
-
-    //--------------------------------------------------------------------
-    /**
-     * Add a schedule listener to be notified when a user clicks anywhere in the
-     * panel which is not on an appointment or resource. The values sent are the
-     * "time" location of the event and the resource column. From this the
-     * listener could pull up a dialog box and ask to add an appointment if they
-     * wanted to.
-     *
-     * @param scheduleListener (not null) the listener to be notified on an
-     * appointment click.
-     */
-    public void setScheduleListener(@NotNull ScheduleListener scheduleListener)
-    {
-        mouseDelegateListener = scheduleListener;
     }
 
     //--------------------------------------------------------------------
@@ -123,9 +107,8 @@ public class DaySchedule extends ScheduleView implements MouseListener
             }
 
             Period period = _increments.toPeriod();
-            
 
-            for (LocalTime time = _startTime; time.compareTo(_endTime) < 0 ; time = time.plus(period))
+            for (LocalTime time = _startTime; time.compareTo(_endTime) < 0; time = time.plus(period))
             {
                 Integer y = layout.getY(time);
                 if (y != null)
@@ -168,16 +151,46 @@ public class DaySchedule extends ScheduleView implements MouseListener
 
     }
 
+    /*public void mouseDragged(MouseEvent e)
+     {
+     }
+
+     public void mouseMoved(MouseEvent e)
+     {
+     }*/
     //--------------------------------------------------------------------
     @Override
     public void mouseClicked(MouseEvent e)
     {
+        if (e.getSource() instanceof AbstractAppointmentComponent)
+        {
+            mouseDelegateListener.appointmentMouseClicked(((AbstractAppointmentComponent) e.getSource()).getAppointment(), e);
+        }
+        
+        else if (e.getSource() instanceof AbstractResourceComponent)
+        {
+            selectedResource = ((AbstractResourceComponent) e.getSource()).getResource();
+            mouseDelegateListener.resourceMouseClicked(selectedResource, e);
+        }
     }
 
     //--------------------------------------------------------------------
     @Override
     public void mousePressed(MouseEvent e)
     {
+        if (e.getSource() instanceof AbstractAppointmentComponent)
+        {
+            repaint(); //Is Selected new element, we have to repaint
+            selectedAppointment = ((AbstractAppointmentComponent) e.getSource()).getAppointment();
+            selectedResource = selectedAppointment.getResource();
+            mouseDelegateListener.appointmentMousePressed(selectedAppointment, e);
+        }
+        
+        else if (e.getSource() instanceof AbstractResourceComponent)
+        {
+            selectedResource = ((AbstractResourceComponent) e.getSource()).getResource();
+            mouseDelegateListener.resourceMousePressed(selectedResource, e);
+        }
     }
 
     //--------------------------------------------------------------------
@@ -233,6 +246,16 @@ public class DaySchedule extends ScheduleView implements MouseListener
         }
     }
 
+    public Appointment getSelectedAppointment()
+    {
+        return selectedAppointment;
+    }
+
+    public Resource getSelectedResource()
+    {
+        return selectedResource;
+    }
+    
     @Override
     LayoutManager instanceNewLayout(ScheduleModel model)
     {

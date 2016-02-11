@@ -2,15 +2,9 @@ package com.thirdnf.resourceScheduler.example;
 
 import com.thirdnf.resourceScheduler.Resource;
 import com.thirdnf.resourceScheduler.components.BasicResourceComponent;
+import java.awt.Color;
+import java.awt.Graphics;
 import org.jetbrains.annotations.NotNull;
-
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-
 
 /**
  * Instances of this will be the resources displayed along the top.  This extends the
@@ -18,12 +12,8 @@ import java.awt.event.MouseListener;
  *
  * @author Joshua Gerth - jgerth@thirdnf.com
  */
-public class ExampleResourceComponent extends BasicResourceComponent implements MouseListener
+public class ExampleResourceComponent extends BasicResourceComponent 
 {
-    private ResourceListener _resourceListener;
-
-    private final JPopupMenu _popupMenu;
-
     /**
      * Constructor given a resource to wrap.
      *
@@ -32,31 +22,6 @@ public class ExampleResourceComponent extends BasicResourceComponent implements 
     public ExampleResourceComponent(@NotNull Resource resource)
     {
         super(resource);
-
-        // Listen for mouse stuff
-        addMouseListener(this);
-
-        // Create our context menu
-        _popupMenu = new JPopupMenu();
-        JMenuItem editItem = new JMenuItem("Edit");
-        editItem.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e)
-            {
-                if (_resourceListener != null) { _resourceListener.handleEdit(_resource); }
-            }
-        });
-        _popupMenu.add(editItem);
-
-        JMenuItem deleteItem = new JMenuItem("Delete");
-        deleteItem.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e)
-            {
-                if (_resourceListener != null) { _resourceListener.handleDelete(_resource); }
-            }
-        });
-        _popupMenu.add(deleteItem);
     }
 
 
@@ -71,56 +36,5 @@ public class ExampleResourceComponent extends BasicResourceComponent implements 
         }
 
         super.paintComponent(g);
-    }
-
-
-    /**
-     * Set the one and only resource listener which will get called on mouse clicks.
-     *
-     * @param resourceListener (not null) The resource listener who cares about mouse clicks.
-     */
-    public void setResourceListener(@NotNull ResourceListener resourceListener)
-    {
-        _resourceListener = resourceListener;
-    }
-
-
-    @Override
-    public void mouseClicked(MouseEvent e) { }
-
-
-    @Override
-    public void mousePressed(MouseEvent e)
-    {
-        maybeShowPopup(e);
-    }
-
-
-    @Override
-    public void mouseReleased(MouseEvent e)
-    {
-        maybeShowPopup(e);
-    }
-
-
-    @Override
-    public void mouseEntered(MouseEvent e) { }
-
-
-    @Override
-    public void mouseExited(MouseEvent e) { }
-
-
-    /**
-     * I'm not entirely sure of this pattern, but it was copied directly from the Javadocs.
-     *
-     * @param e (not null) The mouse event
-     */
-    private void maybeShowPopup(@NotNull MouseEvent e)
-    {
-        if (e.isPopupTrigger()) {
-            _popupMenu.show(e.getComponent(),
-                    e.getX(), e.getY());
-        }
     }
 }

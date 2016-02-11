@@ -129,8 +129,7 @@ public class ExampleScheduleModel extends AbstractScheduleModel
         }
 
         resources.add(resource);
-        
-        
+
         if (index < 0 || index > resources.size())
             index = resources.size() - 1;
 
@@ -200,10 +199,12 @@ public class ExampleScheduleModel extends AbstractScheduleModel
     public void deleteAppointment(@NotNull Appointment appointment)
     {
         int index = Appointments.indexOf(appointment);
+
+        // First remove the RENDER component Let any listeners know we have removed this appointment.
+        fireAppointmentsRemoved(index);
+
         // Remove it from our list
         Appointments.remove(index);
-        // Let any listeners know we have removed this appointment.
-        fireAppointmentsRemoved(index);
     }
 
     public int getResourceCount()

@@ -20,7 +20,7 @@ public class BasicAppointmentComponent extends AbstractAppointmentComponent
 {
     protected static Color BackgroundColor;
     int arc = 10;
-    
+   
     static
     {
         BackgroundColor = new Color(9, 171, 246, 200);
@@ -70,8 +70,17 @@ public class BasicAppointmentComponent extends AbstractAppointmentComponent
 
         graphics.setColor(Color.black);
         graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        graphics.drawString(_appointment.getTitle(), insets.left + 2, insets.top + fontHeight + 2);
-
+       
+        //**********************************************************************
+        // String adjusting
+        int off = 1;
+        for(String val: _appointment.getTitle().split("\n"))
+        {
+            graphics.drawString(val, insets.left + 2, insets.top + fontHeight * off);
+            off ++;
+        }
+        //**********************************************************************
+       
         graphics.setRenderingHints(renderHints);
         graphics.setColor(oldColor);
     }
@@ -98,3 +107,5 @@ public class BasicAppointmentComponent extends AbstractAppointmentComponent
         this.arc = arc;
     }
 }
+
+
