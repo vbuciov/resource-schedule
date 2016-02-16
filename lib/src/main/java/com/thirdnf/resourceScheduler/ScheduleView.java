@@ -35,6 +35,7 @@ import org.joda.time.LocalDate;
  */
 public abstract class ScheduleView extends JPanel implements ScheduleModelListener, MouseListener
 {
+
     protected ScheduleModel _model;
     protected ScheduleListener mouseDelegateListener = null;
     private BasicComponentFactory _componentFactory;
@@ -46,8 +47,8 @@ public abstract class ScheduleView extends JPanel implements ScheduleModelListen
         _componentFactory = new BasicComponentFactory();
         _model = null;
     }
-    
-        //--------------------------------------------------------------------
+
+    //--------------------------------------------------------------------
     /**
      * Add a schedule listener to be notified when a user clicks anywhere in the
      * panel which is not on an appointment or resource. The values sent are the
@@ -400,17 +401,22 @@ public abstract class ScheduleView extends JPanel implements ScheduleModelListen
 
         for (int i = e.getFirtIndex(); i <= e.getLastIndex(); i++)
         {
-            wrapp = addWrapperAndGetAppointment(_model.getAppointmentAt(i));
+            Appointment theNew = _model.getAppointmentAt(i);
 
-            // TODO - Handle this in the existing frame without forcing a redraw of everything
-            // For now we are going to cheat and just reload the date
-            // The appointment may have moved so re-layout
-            revalidate();
+            if (theNew.getDateTime().toLocalDate().equals(_model.getCurrentDate()))
+            {
+                wrapp = addWrapperAndGetAppointment(theNew);
 
-            // Repaint to remove the old one.
-            //repaint();
-            if (wrapp != null)
-                wrapp.repaint();
+                // TODO - Handle this in the existing frame without forcing a redraw of everything
+                // For now we are going to cheat and just reload the date
+                // The appointment may have moved so re-layout
+                revalidate();
+
+                // Repaint to remove the old one.
+                //repaint();
+                if (wrapp != null)
+                    wrapp.repaint();
+            }
         }
     }
 
@@ -482,11 +488,11 @@ public abstract class ScheduleView extends JPanel implements ScheduleModelListen
 
     //--------------------------------------------------------------------
     abstract LayoutManager instanceNewLayout(ScheduleModel model);
-    
+
     //--------------------------------------------------------------------
     abstract Appointment getSelectedAppointment();
-    
-     //--------------------------------------------------------------------
+
+    //--------------------------------------------------------------------
     abstract Resource getSelectedResource();
 
 }
