@@ -140,6 +140,21 @@ public class Scheduler extends JPanel implements Printable
                     }
                 }
             }
+
+            public void appointmentDragReleased(Appointment source, MouseEvent e)
+            {
+                Object[] listeners = listenerList.getListenerList();
+                // Process the listeners last to first, notifying
+                // those that are interested in this event
+                for (int i = listeners.length - 2; i >= 0; i -= 2)
+                {
+                    //noinspection ObjectEquality
+                    if (listeners[i] == ScheduleListener.class)
+                    {
+                        ((ScheduleListener) listeners[i + 1]).appointmentDragReleased(source, e);
+                    }
+                }
+            }
         });
 
     }

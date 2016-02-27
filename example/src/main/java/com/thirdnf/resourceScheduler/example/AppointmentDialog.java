@@ -1,7 +1,6 @@
 /*
  * Created by JFormDesigner on Thu Jan 20 10:45:23 PST 2011
  */
-
 package com.thirdnf.resourceScheduler.example;
 
 import java.awt.*;
@@ -14,23 +13,24 @@ import com.thirdnf.resourceScheduler.ResourceVisitor;
 import org.jetbrains.annotations.NotNull;
 import org.joda.time.*;
 
-
 /**
  * Dialog to add an appointment.
  *
  * @author Joshua Gerth - jgerth@thirdnf.com
  */
-@SuppressWarnings({"FieldCanBeLocal"})
+@SuppressWarnings(
+{
+    "FieldCanBeLocal"
+})
 public class AppointmentDialog extends JDialog
 {
-    private static final LocalTime StartTime = new LocalTime(0, 0, 0);
-    private static final LocalTime EndTime   = new LocalTime(23, 30, 0);
-    private static final Duration  Increment = Duration.standardMinutes(15);
+    private LocalTime StartTime;
+    private LocalTime EndTime;
+    private static final Duration Increment = Duration.standardMinutes(15);
     private LocalDate _date;
     private ExampleAppointment _appointment;
 
     private IOkayListener _listener;
-
 
     public AppointmentDialog(@NotNull Frame owner, @NotNull LocalDate date,
                              @NotNull ExampleScheduleModel model)
@@ -39,12 +39,13 @@ public class AppointmentDialog extends JDialog
         initComponents();
         _date = date;
         _appointment = null;
+        StartTime = model.getStartTime();
+        EndTime = model.getEndTime();
 
         initialize(model);
 
         setTitle("Add Appointment");
     }
-
 
     public AppointmentDialog(@NotNull Frame owner, @NotNull Resource resource, @NotNull DateTime dateTime,
                              @NotNull ExampleScheduleModel model)
@@ -52,16 +53,22 @@ public class AppointmentDialog extends JDialog
         super(owner);
         initComponents();
         _date = dateTime.toLocalDate();
-
         _appointment = null;
+        StartTime = model.getStartTime();
+        EndTime = model.getEndTime();
 
         initialize(model);
         LocalTime last = null;
         LocalTime localTime = dateTime.toLocalTime();
-        for (int index=0; index<_startTimeCombo.getItemCount(); ++index) {
+        for (int index = 0; index < _startTimeCombo.getItemCount(); ++index)
+        {
             LocalTime time = (LocalTime) _startTimeCombo.getItemAt(index);
-            if (time.compareTo(localTime) > 0) {
-                if (last != null) { _startTimeCombo.setSelectedItem(last); }
+            if (time.compareTo(localTime) > 0)
+            {
+                if (last != null)
+                {
+                    _startTimeCombo.setSelectedItem(last);
+                }
                 break;
             }
             last = time;
@@ -76,6 +83,8 @@ public class AppointmentDialog extends JDialog
         initComponents();
         _date = appointment.getDateTime().toLocalDate();
         _appointment = appointment;
+        StartTime = model.getStartTime();
+        EndTime = model.getEndTime();
 
         initialize(model);
 
@@ -83,25 +92,39 @@ public class AppointmentDialog extends JDialog
         _categoryCombo.setSelectedItem(_appointment.getCategory());
         _resourceCombo.setSelectedItem(_appointment.getResource());
         _startTimeCombo.setSelectedItem(_appointment.getDateTime().toLocalTime());
-        _durationSpinner.setValue((int) (_appointment.getDuration().getStandardSeconds()/60));
+        _durationSpinner.setValue((int) (_appointment.getDuration().getStandardSeconds() / 60));
 
         setTitle("Edit Appointment");
     }
-
 
     private void initialize(ExampleScheduleModel model)
     {
         // We are using a combo box simply because we are too lazy to try to parse a string and give helpful
         //  error messages.  This is a example after all.
         _startTimeCombo.setRenderer(new TimeCellRenderer());
-        for (LocalTime time = StartTime; time.compareTo(EndTime) <= 0; time = time.plus(Increment.toPeriod())) {
+        boolean back2AM = false;
+        Period period = Increment.toPeriod();
+        for (LocalTime time = StartTime; time.compareTo(EndTime) <= 0; time = time.plus(period))
+        {
             _startTimeCombo.addItem(time);
+            if (!back2AM)
+                {
+                    //Only when the final period is 23, can back to origin time
+                    if (time.plus(period).compareTo(LocalTime.MIDNIGHT) == 0)
+                    {
+                        back2AM = true;
+                        period = Period.fieldDifference(time, EndTime);
+                    }
+                }
+
+                else
+                    break;
         }
 
         model.visitResources(new ResourceVisitor()
         {
             @Override
-            public boolean visitResource(@NotNull Resource resource)
+            public boolean visitedResource(@NotNull Resource resource)
             {
                 _resourceCombo.addItem(resource);
                 return true;
@@ -119,33 +142,34 @@ public class AppointmentDialog extends JDialog
         });
     }
 
-
     public void setOkayListener(@NotNull IOkayListener listener)
     {
         _listener = listener;
     }
 
-
     private void handleOkay()
     {
-        if (_listener != null) {
+        if (_listener != null)
+        {
             String title = _titleField.getText().trim();
             ExampleResource resource = (ExampleResource) _resourceCombo.getSelectedItem();
             ExampleCategory category = (ExampleCategory) _categoryCombo.getSelectedItem();
             LocalTime startTime = (LocalTime) _startTimeCombo.getSelectedItem();
             int duration = (Integer) _durationSpinner.getValue();
 
-            if (_appointment == null) {
+            if (_appointment == null)
+            {
                 _appointment = new ExampleAppointment(title, category, resource);
             }
-            else {
+            else
+            {
                 _appointment.setTitle(title);
                 _appointment.setResource(resource);
                 _appointment.setCategory(category);
             }
             _appointment.setDateTime(new LocalDateTime(_date.year().get(), _date.monthOfYear().get(),
-                    _date.dayOfMonth().get(), startTime.getHourOfDay(),
-                    startTime.getMinuteOfHour(), startTime.getSecondOfMinute(), 0));
+                                                       _date.dayOfMonth().get(), startTime.getHourOfDay(),
+                                                       startTime.getMinuteOfHour(), startTime.getSecondOfMinute(), 0));
             _appointment.setDuration(Duration.standardMinutes(duration));
 
             _listener.handleOkay(_appointment);
@@ -154,31 +178,30 @@ public class AppointmentDialog extends JDialog
         dispose();
     }
 
-
     /**
-     * Handle the user clicking the cancel button.  This just closes the dialog.
+     * Handle the user clicking the cancel button. This just closes the dialog.
      */
     private void handleCancelButton()
     {
         dispose();
     }
 
-
-
     public static interface IOkayListener
     {
+
         /**
-         * Handle the okay button being clicked.  This should send back the appointment that was
-         *  added or updated.
+         * Handle the okay button being clicked. This should send back the
+         * appointment that was added or updated.
          *
-         * @param appointment (not null) Appointment which was either created or updated.
+         * @param appointment (not null) Appointment which was either created or
+         * updated.
          */
         void handleOkay(@NotNull ExampleAppointment appointment);
     }
 
-
     private static class TimeCellRenderer extends DefaultListCellRenderer
     {
+
         @Override
         public Component getListCellRendererComponent(@NotNull JList list, @NotNull Object value,
                                                       int index, boolean isSelected, boolean cellHasFocus)
@@ -190,10 +213,11 @@ public class AppointmentDialog extends JDialog
         }
     }
 
-
-
-    /** Init Components ... owned by JFormDesigner */
-    private void initComponents() {
+    /**
+     * Init Components ... owned by JFormDesigner
+     */
+    private void initComponents()
+    {
         // JFormDesigner - Component initialization - DO NOT MODIFY  //GEN-BEGIN:initComponents
         dialogPane = new JPanel();
         contentPanel = new JPanel();
@@ -226,8 +250,8 @@ public class AppointmentDialog extends JDialog
             //======== contentPanel ========
             {
                 contentPanel.setLayout(new FormLayout(
-                    "default, $lcgap, [50dlu,default]:grow",
-                    "4*(default, $lgap), default"));
+                        "default, $lcgap, [50dlu,default]:grow",
+                        "4*(default, $lgap), default"));
 
                 //---- label1 ----
                 label1.setText("Title");
@@ -246,8 +270,8 @@ public class AppointmentDialog extends JDialog
                 //======== panel1 ========
                 {
                     panel1.setLayout(new FormLayout(
-                        "[50dlu,default]:grow, $lcgap, default:grow",
-                        "default"));
+                            "[50dlu,default]:grow, $lcgap, default:grow",
+                            "default"));
                     panel1.add(_durationSpinner, cc.xy(1, 1));
 
                     //---- label5 ----
@@ -272,14 +296,16 @@ public class AppointmentDialog extends JDialog
             {
                 buttonBar.setBorder(Borders.BUTTON_BAR_GAP_BORDER);
                 buttonBar.setLayout(new FormLayout(
-                    "$glue, $button, $rgap, $button",
-                    "pref"));
+                        "$glue, $button, $rgap, $button",
+                        "pref"));
 
                 //---- okButton ----
                 okButton.setText("OK");
-                okButton.addActionListener(new ActionListener() {
+                okButton.addActionListener(new ActionListener()
+                {
                     @Override
-                    public void actionPerformed(ActionEvent e) {
+                    public void actionPerformed(ActionEvent e)
+                    {
                         handleOkay();
                     }
                 });
@@ -287,9 +313,11 @@ public class AppointmentDialog extends JDialog
 
                 //---- cancelButton ----
                 cancelButton.setText("Cancel");
-                cancelButton.addActionListener(new ActionListener() {
+                cancelButton.addActionListener(new ActionListener()
+                {
                     @Override
-                    public void actionPerformed(ActionEvent e) {
+                    public void actionPerformed(ActionEvent e)
+                    {
                         handleCancelButton();
                     }
                 });

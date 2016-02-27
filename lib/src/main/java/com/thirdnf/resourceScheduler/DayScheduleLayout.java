@@ -25,15 +25,16 @@ public class DayScheduleLayout implements LayoutManager2
 {
 
     // Location map telling us which column each appointment belongs to.
-    private List<Resource> _resources = new ArrayList<Resource>();
+    private List<Resource> _resources;
 
     // Space to give to the top header.
     private int _topHeader = 25;
     private int _leftHeader = 75;
+    private int width, height;
 
-    private final LocalTime _startTime;
+    private LocalTime _startTime, _endTime;
 
-    private final long _totalSeconds;
+    private long _totalSeconds;
 
     /**
      * This is the horizontal gap (in pixels) which specifies the space between
@@ -57,16 +58,19 @@ public class DayScheduleLayout implements LayoutManager2
     int vgap;
 
     // X offset location, equal to the inset.left
-    private int _x;
+    private int _left;
 
     // Y offset location, equal to the inset.top
-    private int _y;
+    private int _top;
+
+    private Insets lastInsets;
 
     // Our scaling factor assuming 1:1 means one pixel == one second
     private float _scale;
 
     private float _columnWidth = 0;
 
+    //--------------------------------------------------------------------
     /**
      * Constructor. So far the only thing that must be provided is the
      * increments to use for the layout. I think changing this would require a
@@ -77,18 +81,45 @@ public class DayScheduleLayout implements LayoutManager2
      */
     public DayScheduleLayout(@NotNull LocalTime startTime, @NotNull LocalTime endTime)
     {
-        _startTime = startTime;
-
-        // Total number of seconds we are representing
-        _totalSeconds = Period.fieldDifference(startTime, endTime).toStandardDuration().getStandardSeconds();
+        setRangeTime(startTime, endTime);
 
         // Start with a 1:1 scale
         _scale = 1.0f;
 
         hgap = 0;
         vgap = 0;
+
+        _resources = new ArrayList<Resource>();
     }
 
+    //--------------------------------------------------------------------
+    private void setRangeTime(LocalTime start, LocalTime end)
+    {
+        _startTime = start;
+        _endTime = end;
+
+        // Total number of seconds we are representing
+        _totalSeconds = Period.fieldDifference(start, end).toStandardDuration().getStandardSeconds();
+
+    }
+
+    //--------------------------------------------------------------------
+    public void setStartTime(LocalTime value)
+    {
+        this._startTime = value;
+        // Total number of seconds we are representing
+        _totalSeconds = Period.fieldDifference(_startTime, _endTime).toStandardDuration().getStandardSeconds();
+    }
+
+    //--------------------------------------------------------------------
+    public void setEndTime(LocalTime value)
+    {
+        this._endTime = value;
+        // Total number of seconds we are representing
+        _totalSeconds = Period.fieldDifference(_startTime, _endTime).toStandardDuration().getStandardSeconds();
+    }
+
+    //--------------------------------------------------------------------
     /**
      * Set the top header size to the given number of pixels.
      *
@@ -97,10 +128,10 @@ public class DayScheduleLayout implements LayoutManager2
     public void setTopHeader(int pixels)
     {
         _topHeader = pixels;
-
         // TODO - force a recalculate or re-layout
     }
 
+    //--------------------------------------------------------------------
     /**
      * Get the top header. This is the space from the top of the panel to where
      * the header starts.
@@ -112,6 +143,7 @@ public class DayScheduleLayout implements LayoutManager2
         return _topHeader;
     }
 
+    //--------------------------------------------------------------------
     /**
      * Set the left header size to the given number of pixels.
      *
@@ -120,10 +152,10 @@ public class DayScheduleLayout implements LayoutManager2
     public void setLeftHeader(int pixels)
     {
         _leftHeader = pixels;
-
         // TODO - force a recalculate or re-layout
     }
 
+    //--------------------------------------------------------------------
     /**
      * Returns the horizontal gap between components.
      *
@@ -134,6 +166,7 @@ public class DayScheduleLayout implements LayoutManager2
         return hgap;
     }
 
+    //--------------------------------------------------------------------
     /**
      * Sets the horizontal gap between components.
      *
@@ -144,6 +177,7 @@ public class DayScheduleLayout implements LayoutManager2
         this.hgap = hgap;
     }
 
+    //--------------------------------------------------------------------
     /**
      * Returns the vertical gap between components.
      *
@@ -154,6 +188,7 @@ public class DayScheduleLayout implements LayoutManager2
         return vgap;
     }
 
+    //--------------------------------------------------------------------
     /**
      * Sets the vertical gap between components.
      *
@@ -164,6 +199,7 @@ public class DayScheduleLayout implements LayoutManager2
         this.vgap = vgap;
     }
 
+    //--------------------------------------------------------------------
     /**
      * Invalidates the layout, indicating that if the layout manager has cached
      * information it should be discarded.
@@ -173,6 +209,7 @@ public class DayScheduleLayout implements LayoutManager2
     {
     }
 
+    //--------------------------------------------------------------------
     @Override
     public void addLayoutComponent(@NotNull Component comp, @Nullable Object constraints)
     {
@@ -201,12 +238,14 @@ public class DayScheduleLayout implements LayoutManager2
         }
     }
 
+    //--------------------------------------------------------------------
     @Deprecated
     public void addLayoutComponent(String name, Component comp)
     {
         // Not used by this class
     }
 
+    //--------------------------------------------------------------------
     @Override
     public void removeLayoutComponent(Component comp)
     {
@@ -219,6 +258,7 @@ public class DayScheduleLayout implements LayoutManager2
         }
     }
 
+    //--------------------------------------------------------------------
     @Override
     public Dimension preferredLayoutSize(Container parent)
     {
@@ -283,6 +323,7 @@ public class DayScheduleLayout implements LayoutManager2
          }*/
     }
 
+    //--------------------------------------------------------------------
     @Override
     public Dimension minimumLayoutSize(Container parent)
     {
@@ -347,24 +388,28 @@ public class DayScheduleLayout implements LayoutManager2
          }*/
     }
 
+    //--------------------------------------------------------------------
     @Override
     public Dimension maximumLayoutSize(Container target)
     {
         return new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE);
     }
 
+    //--------------------------------------------------------------------
     @Override
     public float getLayoutAlignmentX(Container target)
     {
         return 0.5f;
     }
 
+    //--------------------------------------------------------------------
     @Override
     public float getLayoutAlignmentY(Container target)
     {
         return 0.5f;
     }
 
+    //--------------------------------------------------------------------
     @Override
     public void layoutContainer(Container target)
     {
@@ -376,63 +421,31 @@ public class DayScheduleLayout implements LayoutManager2
             //  column first.  The suppress warnings is here due to a bug/feature in java that can't deal
             //  with generic array creation.
             @SuppressWarnings(
-                    {
-                        "unchecked"
-                    })
-            List<AbstractAppointmentComponent>[] columns = (List<AbstractAppointmentComponent>[]) new List[columnCount];
+            {
+                "unchecked"
+            })
+            List<AbstractAppointmentComponent>[] columns
+                    = (List<AbstractAppointmentComponent>[]) new List[columnCount];
 
             int componentCount = target.getComponentCount();
             for (int i = 0; i < componentCount; ++i)
             {
                 Component component = target.getComponent(i);
                 if (!component.isVisible())
-                {
                     continue;
-                }
 
                 if (component instanceof AbstractResourceComponent)
-                {
-                    AbstractResourceComponent resourceComponent = (AbstractResourceComponent) component;
-                    Resource resource = resourceComponent.getResource();
-
-                    // These are placed at the top of their row
-                    int column = _resources.indexOf(resource);
-
-                    int x = _x + _leftHeader + (int) (_columnWidth * column);
-
-                    int width = (int) _columnWidth;
-
-                    // One rowHeight is one increment
-                    int height = _topHeader;
-
-                    component.setBounds(x, _y, width, height);
-                }
+                    layoutComponent((AbstractResourceComponent) component);
 
                 else if (component instanceof AbstractAppointmentComponent)
                 {
-                    AbstractAppointmentComponent appointmentComponent = (AbstractAppointmentComponent) component;
+                    AbstractAppointmentComponent appointmentComponent
+                            = (AbstractAppointmentComponent) component;
 
                     //Is dragged the component?
                     if (!appointmentComponent.isDragged())
                     {
-                        Appointment appointment = appointmentComponent.getAppointment();
-                        Duration duration = appointment.getDuration();
-                        LocalTime time = appointment.getDateTime().toLocalTime();
-                        int y = getY(time);
-                        int width = (int) _columnWidth;
-                        int height = (int) Math.floor(_scale * duration.getStandardSeconds());
-
-                        Resource resource = appointment.getResource();
-                        int column = resource == null ? -1 : _resources.indexOf(resource);
-
-                        // Give them to column 0 .... I can't think of something better to do
-                        //  at the moment.
-                        if (column == -1)
-                            column = 0;
-
-                        int x = getX(column);
-
-                        appointmentComponent.setBounds(x + 8, y, width - 16, height);
+                        int column = layoutComponent(appointmentComponent);
 
                         if (columns[column] == null)
                             columns[column] = new ArrayList<AbstractAppointmentComponent>();
@@ -440,20 +453,89 @@ public class DayScheduleLayout implements LayoutManager2
                     }
                 }
                 else
-                {
                     System.out.println("Don't know how to layout component: " + component);
-                }
             }
 
             // Now, fix up the appointments in each column
             for (List<AbstractAppointmentComponent> list : columns)
             {
                 if (list != null)
-                {
                     fixOverlaps(list);
-                }
             }
         }
+    }
+
+    //--------------------------------------------------------------------
+    private int layoutComponent(AbstractAppointmentComponent wrap)
+    {
+        Appointment appointment = wrap.getAppointment();
+        Duration duration = appointment.getDuration();
+        LocalTime time = appointment.getDateTime().toLocalTime();
+        
+        //TODO: Ajustar el tiempo según el día de inicio.
+        int y = getY(time);
+        int appointmentWidth = (int) _columnWidth;
+        int appointmentHeight = (int) Math.floor(_scale * duration.getStandardSeconds());
+        //TODO: Ajustar la duración según el día de inicio.
+
+        Resource resource = appointment.getResource();
+        int column = resource == null ? -1 : _resources.indexOf(resource);
+        // Give them to column 0 .... I can't think of something better to do
+        //  at the moment.
+        if (column == -1)
+            column = 0;
+        
+        int x = getX(column);
+
+        wrap.setBounds(x + 8, y, appointmentWidth - 16, appointmentHeight);
+        return column;
+    }
+
+    //--------------------------------------------------------------------
+    private void layoutComponent(AbstractResourceComponent wrap)
+    {
+        Resource resource = wrap.getResource();
+
+        // These are placed at the top of their row
+        int column = _resources.indexOf(resource);
+        int x = getX(column);
+        int resourcesWidth = (int) _columnWidth;
+        int resourcesHeight = _topHeader;
+
+        wrap.setBounds(x, _top, resourcesWidth, resourcesHeight);
+    }
+
+    //--------------------------------------------------------------------
+    /**
+     * Get the x location in the current panel for the given column id. This
+     * gives the x location of the columns left hand side. Use (column + 1) to
+     * find the right hand location.
+     *
+     * @param column The column to get the x value for.
+     * @return The x location of the column start position.
+     */
+    public int getX(int column)
+    {
+        return _left + _leftHeader + (int) (column * _columnWidth);
+    }
+
+    //--------------------------------------------------------------------
+    /**
+     * Public method to ask the layout where a given time location should be
+     * placed. I'm not 100% sure if this breaks the abstraction of the layout by
+     * exposing this. To access this the caller needs to get the layout and then
+     * cast it to a ScheduleLayout. Doesn't seem ideal.
+     *
+     * @param time (not null) Time in question to ask for the y location of.
+     * @return The y location on the current panel for the given time.
+     */
+    public int getY(@NotNull LocalTime time)
+    {
+        // Get the seconds which have passed from the start time to the time they are asking about.
+        long seconds
+                = Period.fieldDifference(_startTime, time).toStandardDuration().getStandardSeconds();
+
+        return _top + _topHeader + (int) (_scale * seconds);
     }
 
     /**
@@ -593,12 +675,13 @@ public class DayScheduleLayout implements LayoutManager2
         if (columns == 0)
             columns = 1;
 
-        Insets insets = target.getInsets();
-        _x = insets.left;
-        _y = insets.top;
+        lastInsets = target.getInsets();
+        _left = lastInsets.left;
+        _top = lastInsets.top;
 
-        int width = target.getWidth() - insets.left - insets.right;
-        int height = target.getHeight() - insets.top - insets.bottom;
+        width = target.getWidth() - lastInsets.left - lastInsets.right;
+        height = target.getHeight() - lastInsets.top - lastInsets.bottom - 1;
+        //Note: 1 px, by bottom
 
         _scale = (float) (height - _topHeader) / (float) _totalSeconds;
         _columnWidth = (float) (width - _leftHeader) / (float) columns;
@@ -606,23 +689,19 @@ public class DayScheduleLayout implements LayoutManager2
         return columns;
     }
 
-    /**
-     * Public method to ask the layout where a given time location should be
-     * placed. I'm not 100% sure if this breaks the abstraction of the layout by
-     * exposing this. To access this the caller needs to get the layout and then
-     * cast it to a ScheduleLayout. Doesn't seem ideal.
-     *
-     * @param time (not null) Time in question to ask for the y location of.
-     * @return The y location on the current panel for the given time.
-     */
-    public int getY(@NotNull LocalTime time)
+    //--------------------------------------------------------------------
+    public int getWidth()
     {
-        // Get the seconds which have passed from the start time to the time they are asking about.
-        long seconds = Period.fieldDifference(_startTime, time).toStandardDuration().getStandardSeconds();
-
-        return _y + _topHeader + (int) (_scale * (float) seconds);
+        return width;
     }
 
+    //--------------------------------------------------------------------
+    public int getHeight()
+    {
+        return height;
+    }
+
+    //--------------------------------------------------------------------
     /**
      * Translate a y position back into a time offset.
      * <p>
@@ -635,30 +714,19 @@ public class DayScheduleLayout implements LayoutManager2
     public LocalTime getTime(int y)
     {
         // Turn the y into seconds
-        int seconds = Math.round((float) (y - (_topHeader + _y)) / _scale);
+        int seconds = Math.round((float) (y - (_topHeader + _top)) / _scale);
 
         // Turn seconds into a time after start time
         return _startTime.plus(Duration.standardSeconds(seconds).toPeriod());
     }
 
+    //--------------------------------------------------------------------
     public float getScale()
     {
         return _scale;
     }
 
-    /**
-     * Get the x location in the current panel for the given column id. This
-     * gives the x location of the columns left hand side. Use (column + 1) to
-     * find the right hand location.
-     *
-     * @param column The column to get the x value for.
-     * @return The x location of the column start position.
-     */
-    public int getX(int column)
-    {
-        return _x + _leftHeader + (int) (column * _columnWidth);
-    }
-
+    //--------------------------------------------------------------------
     /**
      * Get the resource for the given column.
      *
@@ -671,6 +739,7 @@ public class DayScheduleLayout implements LayoutManager2
         return _resources.get(column);
     }
 
+    //--------------------------------------------------------------------
     /**
      * Get the number of columns that the layout has determined it needs to
      * draw. This will be equal to the number of resources available on a given

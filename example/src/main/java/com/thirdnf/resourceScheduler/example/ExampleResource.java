@@ -20,9 +20,9 @@ public class ExampleResource implements Resource
 {
     private String _title;
     private Color _color;
-    private LocalTime _startTime = new LocalTime(9, 0, 0);
-    private Duration _duration = Duration.standardHours(6);
-    private boolean _takeLunch = true;
+    private LocalTime _startTime;
+    private Duration _duration;
+    private boolean _takeLunch;
 
     /**
      * Create the example resource.
@@ -33,6 +33,9 @@ public class ExampleResource implements Resource
     {
         _title = title;
         _color = color;
+        _startTime = new LocalTime(9, 0, 0);
+        _duration = Duration.standardHours(6);
+         _takeLunch = true;
     }
 
 
@@ -95,7 +98,7 @@ public class ExampleResource implements Resource
 
         if (_takeLunch) {
             // Split it into two chunks and give them an hour lunch
-            Seconds seconds = _duration.toStandardSeconds().minus(3600).dividedBy(2);
+            Seconds seconds = _duration.toStandardSeconds().minus(3600)/*.dividedBy(2)*/;
             Duration halfDay = seconds.toStandardDuration();
             list.add(new Availability(_startTime, halfDay));
             list.add(new Availability(_startTime.plus(seconds).plus(Period.hours(1)), halfDay));

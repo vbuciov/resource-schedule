@@ -27,6 +27,8 @@ public interface ScheduleListener extends EventListener
     void appointmentMouseClicked(Appointment source, MouseEvent e);
 
     void appointmentMousePressed(Appointment source, MouseEvent e);
+    
+    void appointmentDragReleased(Appointment source, MouseEvent e);
 
     void resourceMousePressed(Resource source, MouseEvent e);
 

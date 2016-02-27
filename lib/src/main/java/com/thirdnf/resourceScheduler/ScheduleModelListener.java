@@ -24,4 +24,8 @@ import java.util.EventListener;
 public interface ScheduleModelListener extends EventListener
 {
     public void scheduleChange(ScheduleModelEvent e);
+
+    public void scheduleContentChange(ScheduleModelDateEvent e);
+
+    public void scheduleContentChange(ScheduleModelTimeEvent e);
 }

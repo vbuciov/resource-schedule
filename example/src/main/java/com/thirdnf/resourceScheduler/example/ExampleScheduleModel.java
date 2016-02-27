@@ -55,6 +55,14 @@ public class ExampleScheduleModel extends AbstractScheduleModel
         Appointments.add(ExampleAppointment.create("Appointment6", Green, Sally, new LocalTime(12, 30, 0), 40));
         Appointments.add(ExampleAppointment.create("Appointment7", Blue, Freddy, new LocalTime(13, 0, 0), 50));
     }
+    
+    public ExampleScheduleModel()
+    {
+        //super(new LocalDate(), new LocalTime(8, 0, 0), new LocalTime(23, 59, 59));
+        //super(new LocalDate(), new LocalTime(0, 0, 0), new LocalTime(23, 44, 00));
+        //super(new LocalDate(), new LocalTime(9, 0, 0), new LocalTime(21, 00, 00));
+         //super(new LocalDate(), new LocalTime(0, 0, 0), new LocalTime(23, 45, 0));
+    }
 
     //--------------------------------------------------------------------
     @Override
@@ -67,7 +75,7 @@ public class ExampleScheduleModel extends AbstractScheduleModel
             {
                 continue;
             }
-            visitor.visitAppointment(appointment);
+            visitor.visitedAppointment(appointment);
         }
     }
 
@@ -91,7 +99,7 @@ public class ExampleScheduleModel extends AbstractScheduleModel
 
         for (Resource resource : resources)
         {
-            visitor.visitResource(resource);
+            visitor.visitedResource(resource);
         }
     }
 

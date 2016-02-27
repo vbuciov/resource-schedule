@@ -49,7 +49,7 @@ public abstract class AbstractAppointmentComponent extends JComponent implements
     protected AbstractAppointmentComponent(@NotNull Appointment appointment)
     {
         _appointment = appointment;
-        amountPixels = 15;//30 Seconds
+        amountPixels = 30;
         dragged = false;
         setBorder(new ResizableBorder(8));
         addMouseListener(this);
@@ -72,23 +72,6 @@ public abstract class AbstractAppointmentComponent extends JComponent implements
         }
 
         //inputListener.mouseMoved(e);
-    }
-
-    //--------------------------------------------------------------------
-    /**
-     * Invoked when the mouse is dragged Over the component.
-     *
-     * @param e Event information
-     */
-    @Override
-    public final void mouseDragged(MouseEvent e)
-    {
-        dragged = true;
-        if (startPoint != null)
-        {
-            Appointment_mouseDragged(e);
-            //inputListener.mouseDragged(e);
-        }
     }
 
     //--------------------------------------------------------------------
@@ -128,10 +111,31 @@ public abstract class AbstractAppointmentComponent extends JComponent implements
      */
     public final void mouseReleased(MouseEvent e)
     {
-        Appointment_mouseReleased(e);
-        dragged = false;
+        if (dragged)
+        {
+            dragged = false;
+            Appointment_DragReleased(e);
+            inputListener.mouseReleased(e);
+        }
+        startPoint = null;
+    }
 
-        //inputListener.mouseReleased(e);
+    //--------------------------------------------------------------------
+    /**
+     * Invoked when the mouse is dragged Over the component.
+     *
+     * @param e Event information
+     */
+    @Override
+    public final void mouseDragged(MouseEvent e)
+    {
+
+        if (startPoint != null)
+        {
+            dragged = true;
+            Appointment_mouseDragged(e);
+            //inputListener.mouseDragged(e);
+        }
     }
 
     //--------------------------------------------------------------------
@@ -177,12 +181,12 @@ public abstract class AbstractAppointmentComponent extends JComponent implements
             switch (cursor)
             {
                 case Cursor.N_RESIZE_CURSOR:
-                    if (!(h - dy < amountPixels) && y + dy > layout.getTopHeader())
+                    if (!(h - dy < amountPixels) && y + dy >= layout.getTopHeader() + container.getInsets().top)
                         setBounds(x, y + dy, w, h - dy);
                     break;
 
                 case Cursor.S_RESIZE_CURSOR:
-                    if (!(h + dy < amountPixels) && y + h + dy < container.getHeight())
+                    if (!(h + dy < amountPixels) && y + h + dy <= layout.getHeight() + 1)
                     {
                         setBounds(x, y, w, h + dy);
                         startPoint = me.getPoint();
@@ -236,7 +240,7 @@ public abstract class AbstractAppointmentComponent extends JComponent implements
                     break;
 
                 case Cursor.MOVE_CURSOR:
-                    if (y + dy + 1 > layout.getTopHeader() + container.getInsets().top && y + h + dy < container.getHeight())
+                    if (y + dy >= layout.getTopHeader() + container.getInsets().top && y + h + dy <= layout.getHeight() + 1)
                     {
                         Rectangle bounds = getBounds();
                         bounds.translate(dx, dy);
@@ -248,9 +252,9 @@ public abstract class AbstractAppointmentComponent extends JComponent implements
     }
 
     //--------------------------------------------------------------------
-    private void Appointment_mouseReleased(MouseEvent me)
+    private void Appointment_DragReleased(MouseEvent me)
     {
-        if (startPoint != null && dragged)
+        if (startPoint != null)
         {
             ScheduleView container = (ScheduleView) getParent();
             int x = getX();
@@ -300,7 +304,6 @@ public abstract class AbstractAppointmentComponent extends JComponent implements
             //container.revalidate(); The container going to revalidate, when updated notify
         }
 
-        startPoint = null;
     }
 
     //--------------------------------------------------------------------

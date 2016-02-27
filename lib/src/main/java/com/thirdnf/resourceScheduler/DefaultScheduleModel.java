@@ -48,7 +48,7 @@ public class DefaultScheduleModel extends AbstractScheduleModel
             {
                 continue;
             }
-            visitor.visitAppointment(appointment);
+            visitor.visitedAppointment(appointment);
         }
     }
 
@@ -58,7 +58,7 @@ public class DefaultScheduleModel extends AbstractScheduleModel
     {
         for (Resource resource : Resources)
         {
-            visitor.visitResource(resource);
+            visitor.visitedResource(resource);
         }
     }
 

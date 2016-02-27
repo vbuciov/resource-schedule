@@ -17,5 +17,5 @@ public interface AppointmentVisitor
      * @param appointment (not null) An appointment which matched the search.
      * @return {@code true} If the caller should keep looping, {@code false} if it should stop.
      */
-    boolean visitAppointment(@NotNull Appointment appointment);
+    boolean visitedAppointment(@NotNull Appointment appointment);
 }

@@ -3,14 +3,11 @@
  */
 package com.thirdnf.resourceScheduler.example;
 
-import java.awt.*;
+import com.jgoodies.forms.factories.CC;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.print.PrinterException;
 import java.awt.print.PrinterJob;
-import javax.swing.*;
-import javax.swing.border.*;
-import com.jgoodies.forms.factories.*;
 import com.jgoodies.forms.layout.CellConstraints;
 import com.jgoodies.forms.layout.FormLayout;
 
@@ -18,7 +15,22 @@ import com.thirdnf.resourceScheduler.Appointment;
 import com.thirdnf.resourceScheduler.Resource;
 import com.thirdnf.resourceScheduler.ScheduleListener;
 import com.thirdnf.resourceScheduler.Scheduler;
+import java.awt.Container;
+import java.awt.Dimension;
+import java.awt.Insets;
 import java.awt.event.MouseEvent;
+import javax.swing.ButtonGroup;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JMenuItem;
+import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
+import javax.swing.JRadioButton;
+import javax.swing.JScrollPane;
+import javax.swing.JTextPane;
+import javax.swing.WindowConstants;
+import javax.swing.border.TitledBorder;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joda.time.DateTime;
@@ -144,7 +156,7 @@ public class ExampleScheduler extends JFrame
 
             public void resourceMousePressed(Resource source, MouseEvent e)
             {
-                 //Review for secondary button of mouse
+                //Review for secondary button of mouse
                 if (e.isPopupTrigger())
                     _popupResourceMenu.show(e.getComponent(),
                                             e.getX(), e.getY());
@@ -154,6 +166,12 @@ public class ExampleScheduler extends JFrame
             {
                 if (e.getClickCount() > 1)
                     handleResourceEdit(source);
+            }
+
+            public void appointmentDragReleased(Appointment source, MouseEvent e)
+            {
+                //When drag operation finish
+                handleAppointmentClick(source);
             }
         });
 
@@ -319,43 +337,66 @@ public class ExampleScheduler extends JFrame
         dialog.setVisible(true);
     }
 
+    private void handledTimeChange(ActionEvent e)
+    {
+       ConfigureTimeDialog dialog = new ConfigureTimeDialog(this, bsScheduler);
+       Dimension desktopSize = this.getSize();
+        Dimension frameSize = dialog.getSize();
+        dialog.setLocation((desktopSize.width - frameSize.width) / 2,
+                (desktopSize.height - frameSize.height) / 2);
+        dialog.setVisible(true);
+ 
+       dialog.setOkActionListener (new ConfigureTimeDialog.IAcceptListener()
+       {
+           public void handleOkay(LocalTime start, LocalTime end)
+           {
+              bsScheduler.setStartTime(start);
+              bsScheduler.setEndTime(end);
+           }
+
+       });
+       dialog.setVisible(true);
+    }
+
     /**
      * Initialize the components.
      */
     private void initComponents()
     {
         // JFormDesigner - Component initialization - DO NOT MODIFY  //GEN-BEGIN:initComponents
-        panel1 = new JPanel();
-        panel2 = new JPanel();
-        label1 = new JLabel();
+        pBody = new JPanel();
+        pDayGroup = new JPanel();
+        lbDayInfo = new JLabel();
         _todayRadio = new JRadioButton();
         _tomorrowRadio = new JRadioButton();
-        scrollPane1 = new JScrollPane();
+        spDetailsPane = new JScrollPane();
         _detailsPane = new JTextPane();
         _scheduler = new Scheduler();
-        button2 = new JButton();
-        button3 = new JButton();
-        button1 = new JButton();
+        btnAddResource = new JButton();
+        btnAddAppointment = new JButton();
+        btnPrint = new JButton();
+        btnChangeTime = new JButton();
 
         //======== this ========
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         setMinimumSize(new Dimension(500, 300));
         setTitle("Resource Scheduler Demo");
         Container contentPane = getContentPane();
+
         contentPane.setLayout(new FormLayout(
                 "default:grow",
                 "default:grow"));
 
         //======== panel1 ========
-        panel1.setLayout(new FormLayout(
+        pBody.setLayout(new FormLayout(
                 "2*(default, $lcgap), default:grow",
                 "default, $lgap, default:grow, 2*($lgap, default)"));
 
         //======== panel2 ========
 //        panel2.setLayout(new BoxLayout(panel2, BoxLayout.X_AXIS));
         //---- label1 ----
-        label1.setText("Date:");
-        panel2.add(label1);
+        lbDayInfo.setText("Date:");
+        pDayGroup.add(lbDayInfo);
 
         //---- _todayRadio ----
         _todayRadio.setText("Today");
@@ -368,7 +409,7 @@ public class ExampleScheduler extends JFrame
                 handleSelectToday();
             }
         });
-        panel2.add(_todayRadio);
+        pDayGroup.add(_todayRadio);
 
         //---- _tomorrowRadio ----
         _tomorrowRadio.setText("Tomorrow");
@@ -380,24 +421,23 @@ public class ExampleScheduler extends JFrame
                 handleSelectTomorrow();
             }
         });
-        panel2.add(_tomorrowRadio);
+        pDayGroup.add(_tomorrowRadio);
 
-        panel1.add(panel2, CC.xywh(1, 1, 3, 1, CC.FILL, CC.FILL));
+        pBody.add(pDayGroup, CC.xywh(1, 1, 3, 1, CC.FILL, CC.FILL));
 
-        //======== scrollPane1 ========
-        {
-            scrollPane1.setMinimumSize(new Dimension(15, 23));
+        spDetailsPane.setMinimumSize(new Dimension(15, 23));
 
-            //---- _detailsPane ----
-            _detailsPane.setBorder(new TitledBorder("Appointment Details"));
-            scrollPane1.setViewportView(_detailsPane);
-        }
-        panel1.add(scrollPane1, CC.xywh(1, 3, 3, 1, CC.DEFAULT, CC.FILL));
-        panel1.add(_scheduler, CC.xywh(5, 1, 1, 7));
+        //---- _detailsPane ----
+        _detailsPane.setBorder(new TitledBorder("Appointment Details"));
+        spDetailsPane.setViewportView(_detailsPane);
+
+        pBody.add(spDetailsPane, CC.xywh(1, 3, 3, 1, CC.DEFAULT, CC.FILL));
+        pBody.add(_scheduler, CC.xywh(5, 1, 1, 7));
+
 
         //---- button2 ----
-        button2.setText("Add Resource");
-        button2.addActionListener(new ActionListener()
+        btnAddResource.setText("Add Resource");
+        btnAddResource.addActionListener(new ActionListener()
         {
             @Override
             public void actionPerformed(ActionEvent e)
@@ -405,11 +445,11 @@ public class ExampleScheduler extends JFrame
                 handleAddResource();
             }
         });
-        panel1.add(button2, CC.xy(1, 5));
+        pBody.add(btnAddResource, CC.xy(1, 5));
 
         //---- button3 ----
-        button3.setText("Add Appointment");
-        button3.addActionListener(new ActionListener()
+        btnAddAppointment.setText("Add Appointment");
+        btnAddAppointment.addActionListener(new ActionListener()
         {
             @Override
             public void actionPerformed(ActionEvent e)
@@ -417,11 +457,23 @@ public class ExampleScheduler extends JFrame
                 handleAddAppointment();
             }
         });
-        panel1.add(button3, CC.xy(3, 5));
+        pBody.add(btnAddAppointment, CC.xy(3, 5));
+        
+        
+        //---- btnChangeTime -----
+        btnChangeTime.setText("Change Time");
+        btnChangeTime.addActionListener(new ActionListener()
+        {
+            public void actionPerformed(ActionEvent e)
+            {
+                handledTimeChange(e);
+            }
+        });
+        pBody.add(btnChangeTime, CC.xy(1, 7));
 
         //---- button1 ----
-        button1.setText("Print");
-        button1.addActionListener(new ActionListener()
+        btnPrint.setText("Print");
+        btnPrint.addActionListener(new ActionListener()
         {
             @Override
             public void actionPerformed(ActionEvent e)
@@ -429,30 +481,31 @@ public class ExampleScheduler extends JFrame
                 handlePrint();
             }
         });
-        panel1.add(button1, CC.xywh(1, 7, 3, 1));
+        pBody.add(btnPrint, CC.xy(3, 7));
 
-        contentPane.add(panel1, new CellConstraints(1, 1, 1, 1, CC.DEFAULT, CC.FILL, new Insets(5, 5, 5, 5)));
+        contentPane.add(pBody, new CellConstraints(1, 1, 1, 1, CC.DEFAULT, CC.FILL, new Insets(5, 5, 5, 5)));
         pack();
         setLocationRelativeTo(getOwner());
 
         //---- buttonGroup1 ----
-        ButtonGroup buttonGroup1 = new ButtonGroup();
-        buttonGroup1.add(_todayRadio);
-        buttonGroup1.add(_tomorrowRadio);
+        ButtonGroup rgRadioDay = new ButtonGroup();
+        rgRadioDay.add(_todayRadio);
+        rgRadioDay.add(_tomorrowRadio);
         // JFormDesigner - End of component initialization  //GEN-END:initComponents
     }
 
     // JFormDesigner - Variables declaration - DO NOT MODIFY  //GEN-BEGIN:variables
-    private JPanel panel1;
-    private JPanel panel2;
-    private JLabel label1;
+    private JPanel pBody;
+    private JPanel pDayGroup;
+    private JLabel lbDayInfo;
     private JRadioButton _todayRadio;
     private JRadioButton _tomorrowRadio;
-    private JScrollPane scrollPane1;
+    private JScrollPane spDetailsPane;
     private JTextPane _detailsPane;
     private Scheduler _scheduler;
-    private JButton button2;
-    private JButton button3;
-    private JButton button1;
+    private JButton btnAddResource;
+    private JButton btnAddAppointment;
+    private JButton btnPrint;
+    private JButton btnChangeTime;
     // JFormDesigner - End of variables declaration  //GEN-END:variables
 }

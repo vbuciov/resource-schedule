@@ -107,7 +107,9 @@ public abstract class ScheduleView extends JPanel implements ScheduleModelListen
     public void setDate(@NotNull LocalDate date)
     {
         _model.setCurrentDate(date);
-        scheduleChange(new ScheduleModelEvent(_model, ScheduleModelEvent.ALL_ESTRUCTURE));
+
+        if (!(_model instanceof AbstractScheduleModel))
+            scheduleChange(new ScheduleModelEvent(_model, ScheduleModelEvent.ALL_ESTRUCTURE));
     }
 
     //--------------------------------------------------------------------
@@ -127,7 +129,7 @@ public abstract class ScheduleView extends JPanel implements ScheduleModelListen
     /**
      * Handled the Schedule changes
      *
-     * @param e The ifnformation of event
+     * @param e The information of event
      */
     public void scheduleChange(ScheduleModelEvent e)
     {
@@ -159,6 +161,39 @@ public abstract class ScheduleView extends JPanel implements ScheduleModelListen
 
             case ScheduleModelEvent.DELETE_APPOINTMENT:
                 onAppointmentRemoved(e);
+                break;
+        }
+    }
+
+    //--------------------------------------------------------------------
+    /**
+     * Handled the Schedule Content Date changes
+     *
+     * @param e The information of event
+     */
+    public void scheduleContentChange(ScheduleModelDateEvent e)
+    {
+        switch (e.getType())
+        {
+            case ScheduleModelDateEvent.CONTENTS_CHANGED:
+                onStructureChanged(e);
+                break;
+        }
+    }
+
+    //--------------------------------------------------------------------
+    /**
+     * Handled the Schedule Content Time changes
+     *
+     * @param e The information of event
+     */
+    public void scheduleContentChange(ScheduleModelTimeEvent e)
+    {
+        switch (e.getType())
+        {
+            case ScheduleModelTimeEvent.START_CHANGED:
+            case ScheduleModelTimeEvent.END_CHANGED:
+                onStructureChanged(e);
                 break;
         }
     }
@@ -315,7 +350,7 @@ public abstract class ScheduleView extends JPanel implements ScheduleModelListen
         removeAll();
         _model.visitResources(new ResourceVisitor()
         {
-            public boolean visitResource(Resource resource)
+            public boolean visitedResource(Resource resource)
             {
                 addWrapperResource(resource, -1);
                 return true;
@@ -324,16 +359,71 @@ public abstract class ScheduleView extends JPanel implements ScheduleModelListen
 
         _model.visitAppointments(new AppointmentVisitor()
         {
-            public boolean visitAppointment(Appointment appointment)
+            public boolean visitedAppointment(Appointment appointment)
             {
                 addWrapperAppointment(appointment);
                 return true;
             }
         }, _model.getCurrentDate());
 
-        // Force the layout to redraw
+        // Force recalculate the layout to redraw
         revalidate();
+        // We have added a column so we need to repaint our background as well
+        repaint();
+    }
 
+    //---------------------------------------------------------------------
+    private void onStructureChanged(ScheduleModelTimeEvent e)
+    {
+        removeAll();
+        _model.visitResources(new ResourceVisitor()
+        {
+            public boolean visitedResource(Resource resource)
+            {
+                addWrapperResource(resource, -1);
+                return true;
+            }
+        }, _model.getCurrentDate());
+
+        _model.visitAppointments(new AppointmentVisitor()
+        {
+            public boolean visitedAppointment(Appointment appointment)
+            {
+                addWrapperAppointment(appointment);
+                return true;
+            }
+        }, _model.getCurrentDate());
+
+        // Force recalculate the layout to redraw
+        revalidate();
+        // We have added a column so we need to repaint our background as well
+        repaint();
+    }
+
+    //---------------------------------------------------------------------
+    private void onStructureChanged(ScheduleModelDateEvent e)
+    {
+        removeAll();
+        _model.visitResources(new ResourceVisitor()
+        {
+            public boolean visitedResource(Resource resource)
+            {
+                addWrapperResource(resource, -1);
+                return true;
+            }
+        }, e.getNew_value());
+
+        _model.visitAppointments(new AppointmentVisitor()
+        {
+            public boolean visitedAppointment(Appointment appointment)
+            {
+                addWrapperAppointment(appointment);
+                return true;
+            }
+        }, e.getNew_value());
+
+        // Force recalculate the layout to redraw
+        revalidate();
         // We have added a column so we need to repaint our background as well
         repaint();
     }
@@ -347,8 +437,7 @@ public abstract class ScheduleView extends JPanel implements ScheduleModelListen
             wrapp = addWrapperAndGetResource(_model.getResourceAt(i), i);
 
             // Force the layout to redraw
-            revalidate();
-
+            //revalidate();
             if (wrapp != null)
                 wrapp.repaint();
         }
@@ -407,17 +496,17 @@ public abstract class ScheduleView extends JPanel implements ScheduleModelListen
             {
                 wrapp = addWrapperAndGetAppointment(theNew);
 
-                // TODO - Handle this in the existing frame without forcing a redraw of everything
-                // For now we are going to cheat and just reload the date
-                // The appointment may have moved so re-layout
-                revalidate();
-
                 // Repaint to remove the old one.
                 //repaint();
-                if (wrapp != null)
-                    wrapp.repaint();
+                /*if (wrapp != null)
+                    wrapp.repaint();*/
             }
         }
+
+        //Do layout all elemento to fix overlaps
+        revalidate();
+        
+        repaint();
     }
 
     //--------------------------------------------------------------------

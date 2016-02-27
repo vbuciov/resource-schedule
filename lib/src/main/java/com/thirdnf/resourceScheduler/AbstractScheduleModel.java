@@ -29,7 +29,7 @@ public abstract class AbstractScheduleModel implements ScheduleModel
     {
         _currentDate = new LocalDate();
         start = new LocalTime(0, 0, 0); // Default is 12 am 
-        end = new LocalTime(23, 45, 00); // 23:45 pm
+        end = new LocalTime(23, 59, 59); // 23:45 pm
     }
 
     //--------------------------------------------------------------------
@@ -37,7 +37,7 @@ public abstract class AbstractScheduleModel implements ScheduleModel
     {
         _currentDate = when;
         start = new LocalTime(0, 0, 0); // Default is 12 am 
-        end = new LocalTime(23, 45, 00); // 23:45 pm
+        end = new LocalTime(23, 59, 59); // 23:59 pm, 1 minute before 00 am
     }
 
     //--------------------------------------------------------------------
@@ -59,7 +59,12 @@ public abstract class AbstractScheduleModel implements ScheduleModel
     @Override
     public void setCurrentDate(LocalDate value)
     {
+        LocalDate oldValue = _currentDate;
         this._currentDate = value;
+
+        if (oldValue != null && !value.equals(oldValue))
+            fireCurrentDateChange(oldValue, value);
+
     }
 
     //--------------------------------------------------------------------
@@ -71,6 +76,16 @@ public abstract class AbstractScheduleModel implements ScheduleModel
     }
 
     //--------------------------------------------------------------------
+    public void setStartTime(LocalTime value)
+    {
+        LocalTime oldValue = start;
+        start = value;
+
+        if (oldValue != null && !value.equals(oldValue))
+            fireStartTimeChange(oldValue, value);
+    }
+
+    //--------------------------------------------------------------------
     @Override
     public LocalTime getEndTime()
     {
@@ -78,15 +93,31 @@ public abstract class AbstractScheduleModel implements ScheduleModel
     }
 
     //--------------------------------------------------------------------
-    public void setStartTime(LocalTime value)
+    public void setEndTime(LocalTime value)
     {
-        start = value;
+        LocalTime oldValue = end;
+        end = value;
+
+        if (oldValue != null && !value.equals(oldValue))
+            fireEndTimeChange(oldValue, value);
     }
 
     //--------------------------------------------------------------------
-    public void setEndTime(LocalTime value)
+    public void fireCurrentDateChange(LocalDate oldDate, LocalDate newDate)
     {
-        end = value;
+        fireContentsChanged(new ScheduleModelDateEvent(this, ScheduleModelDateEvent.CONTENTS_CHANGED, oldDate, newDate));
+    }
+
+    //--------------------------------------------------------------------
+    public void fireStartTimeChange(LocalTime oldStartTime, LocalTime newStartTime)
+    {
+        fireContentsChanged(new ScheduleModelTimeEvent(this, ScheduleModelTimeEvent.START_CHANGED, oldStartTime, newStartTime));
+    }
+
+    //--------------------------------------------------------------------
+    public void fireEndTimeChange(LocalTime oldEndtTime, LocalTime newEndTime)
+    {
+        fireContentsChanged(new ScheduleModelTimeEvent(this, ScheduleModelTimeEvent.END_CHANGED, oldEndtTime, newEndTime));
     }
 
     //--------------------------------------------------------------------
@@ -252,6 +283,34 @@ public abstract class AbstractScheduleModel implements ScheduleModel
     }
 
     //--------------------------------------------------------------------
+    public void fireContentsChanged(ScheduleModelDateEvent e)
+    {
+        // Guaranteed to return a non-null array
+        Object[] listeners = _listenerList.getListenerList();
+        // Process the listeners last to first, notifying
+        // those that are interested in this event
+        for (int i = listeners.length - 2; i >= 0; i -= 2)
+        {
+            if (listeners[i] == ScheduleModelListener.class)
+                ((ScheduleModelListener) listeners[i + 1]).scheduleContentChange(e);
+        }
+    }
+
+    //--------------------------------------------------------------------
+    public void fireContentsChanged(ScheduleModelTimeEvent e)
+    {
+        // Guaranteed to return a non-null array
+        Object[] listeners = _listenerList.getListenerList();
+        // Process the listeners last to first, notifying
+        // those that are interested in this event
+        for (int i = listeners.length - 2; i >= 0; i -= 2)
+        {
+            if (listeners[i] == ScheduleModelListener.class)
+                ((ScheduleModelListener) listeners[i + 1]).scheduleContentChange(e);
+        }
+    }
+
+    //--------------------------------------------------------------------
     public void fireScheduleModelChanged(ScheduleModelEvent e)
     {
         // Guaranteed to return a non-null array
@@ -262,15 +321,15 @@ public abstract class AbstractScheduleModel implements ScheduleModel
         {
             if (listeners[i] == ScheduleModelListener.class)
                 ((ScheduleModelListener) listeners[i + 1]).scheduleChange(e);
-            
-            else if (e.getType() > ScheduleModelEvent.RESOURCE_EVENT && 
-                    e.getType() < ScheduleModelEvent.APPOINTMENT_EVENT &&
-                    listeners[i] == ResourceChangeListener.class)
-                    fireResourceChanged(e, (ResourceChangeListener) listeners[i + 1]);
 
-            else if (e.getType() > ScheduleModelEvent.APPOINTMENT_EVENT &&
-                    listeners[i] == AppointmentChangeListener.class)
-                    fireAppointmentChanged(e, (AppointmentChangeListener) listeners[i + 1]);
+            else if (e.getType() > ScheduleModelEvent.RESOURCE_EVENT
+                    && e.getType() < ScheduleModelEvent.APPOINTMENT_EVENT
+                    && listeners[i] == ResourceChangeListener.class)
+                fireResourceChanged(e, (ResourceChangeListener) listeners[i + 1]);
+
+            else if (e.getType() > ScheduleModelEvent.APPOINTMENT_EVENT
+                    && listeners[i] == AppointmentChangeListener.class)
+                fireAppointmentChanged(e, (AppointmentChangeListener) listeners[i + 1]);
         }
     }
 
@@ -372,5 +431,4 @@ public abstract class AbstractScheduleModel implements ScheduleModel
     {
         _listenerList.remove(AppointmentChangeListener.class, listener);
     }
-
 }

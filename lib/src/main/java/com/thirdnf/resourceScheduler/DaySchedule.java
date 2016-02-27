@@ -32,6 +32,7 @@ import org.joda.time.DateTime;
  */
 public class DaySchedule extends ScheduleView
 {
+
     private Appointment selectedAppointment;
     private Resource selectedResource;
     private final Duration _increments;
@@ -107,8 +108,9 @@ public class DaySchedule extends ScheduleView
             }
 
             Period period = _increments.toPeriod();
+            boolean back2AM = false;
 
-            for (LocalTime time = _startTime; time.compareTo(_endTime) < 0; time = time.plus(period))
+            for (LocalTime time = _startTime; time.compareTo(_endTime) <= 0; time = time.plus(period))
             {
                 Integer y = layout.getY(time);
                 if (y != null)
@@ -118,22 +120,38 @@ public class DaySchedule extends ScheduleView
                     if (onTheHour)
                     {
                         graphics.setColor(Color.black);
-                    }
-
-                    graphics.drawLine(leftHeader, y, insets.left + width, y);
-
-                    if (onTheHour)
-                    {
                         // We want to draw hour markers and right justify them.
                         String timeString = time.toString("h:mm a");
 
                         Rectangle2D rect = fontMetrics.getStringBounds(timeString, graphics);
                         int stringX = (int) (leftHeader - rect.getWidth() - 10);
 
-                        graphics.drawString(timeString, stringX, y + fontHeight / 2);
+                        // graphics.drawString(timeString, stringX, y + fontHeight / 2);
+                        graphics.drawString(timeString, stringX, y + fontHeight - insets.top);
+
+                    }
+
+                    else if (back2AM)
+                        graphics.setColor(Color.black);
+
+                    else
                         graphics.setColor(Color.lightGray);
+
+                    graphics.drawLine(leftHeader, y, insets.left + width, y);
+                }
+
+                if (!back2AM)
+                {
+                    //Only when the final period is 23, can back to origin time
+                    if (time.plus(period).compareTo(LocalTime.MIDNIGHT) == 0)
+                    {
+                        back2AM = true;
+                        period = Period.fieldDifference(time, _endTime);
                     }
                 }
+
+                else
+                    break;
             }
 
             // Finally draw the column lines over everything
@@ -151,13 +169,36 @@ public class DaySchedule extends ScheduleView
 
     }
 
-    /*public void mouseDragged(MouseEvent e)
-     {
-     }
+    //--------------------------------------------------------------------
+    /**
+     * Handled the Schedule Content Time changes
+     *
+     * @param e The information of event
+     */
+    @Override
+    public void scheduleContentChange(ScheduleModelTimeEvent e)
+    {
+        //Reconfigure Layout Range.
+        if (getLayout() instanceof DayScheduleLayout)
+        {
+            DayScheduleLayout layout = (DayScheduleLayout) getLayout();
 
-     public void mouseMoved(MouseEvent e)
-     {
-     }*/
+            switch (e.getType())
+            {
+                case ScheduleModelTimeEvent.START_CHANGED:
+                    layout.setStartTime(e.getNew_value());
+                    break;
+
+                case ScheduleModelTimeEvent.END_CHANGED:
+                    layout.setEndTime(e.getNew_value());
+                    break;
+            }
+
+        }
+
+        super.scheduleContentChange(e);
+    }
+
     //--------------------------------------------------------------------
     @Override
     public void mouseClicked(MouseEvent e)
@@ -166,7 +207,7 @@ public class DaySchedule extends ScheduleView
         {
             mouseDelegateListener.appointmentMouseClicked(((AbstractAppointmentComponent) e.getSource()).getAppointment(), e);
         }
-        
+
         else if (e.getSource() instanceof AbstractResourceComponent)
         {
             selectedResource = ((AbstractResourceComponent) e.getSource()).getResource();
@@ -185,7 +226,7 @@ public class DaySchedule extends ScheduleView
             selectedResource = selectedAppointment.getResource();
             mouseDelegateListener.appointmentMousePressed(selectedAppointment, e);
         }
-        
+
         else if (e.getSource() instanceof AbstractResourceComponent)
         {
             selectedResource = ((AbstractResourceComponent) e.getSource()).getResource();
@@ -209,40 +250,48 @@ public class DaySchedule extends ScheduleView
     @Override
     public void mouseReleased(MouseEvent e)
     {
-        if (mouseDelegateListener != null && getLayout() instanceof DayScheduleLayout)
+        if (mouseDelegateListener != null)
         {
-            int x = e.getX();
-            int y = e.getY();
-
-            DayScheduleLayout layout = (DayScheduleLayout) getLayout();
-
-            // Determine the resource clicked
-            Resource resource = null;
-            int columns = layout.getColumnCount();
-            int x1 = layout.getX(0);
-
-            for (int i = 0; i < columns; ++i)
+            if (e.getSource() instanceof AbstractAppointmentComponent)
             {
-                int x2 = layout.getX(i + 1);
-                if (x > x1 && x < x2)
+                mouseDelegateListener.appointmentDragReleased(((AbstractAppointmentComponent) e.getSource()).getAppointment(), e);
+            }
+
+            else if (getLayout() instanceof DayScheduleLayout)
+            {
+                int x = e.getX();
+                int y = e.getY();
+
+                DayScheduleLayout layout = (DayScheduleLayout) getLayout();
+
+                // Determine the resource clicked
+                Resource resource = null;
+                int columns = layout.getColumnCount();
+                int x1 = layout.getX(0);
+
+                for (int i = 0; i < columns; ++i)
                 {
-                    resource = layout.getResource(i);
+                    int x2 = layout.getX(i + 1);
+                    if (x > x1 && x < x2)
+                    {
+                        resource = layout.getResource(i);
+                    }
+                    x1 = x2;
                 }
-                x1 = x2;
+
+                if (resource == null)
+                {
+                    return;
+                }
+
+                LocalTime time = layout.getTime(y);
+
+                // Now convert the time into a date time and send it to the listener
+                DateTime dateTime = new DateTime(_model.getCurrentDate().getYear(), _model.getCurrentDate().getMonthOfYear(), _model.getCurrentDate().getDayOfMonth(),
+                                                 time.getHourOfDay(), time.getMinuteOfHour(), time.getSecondOfMinute(), 0);
+
+                mouseDelegateListener.actionPerformed(resource, dateTime);
             }
-
-            if (resource == null)
-            {
-                return;
-            }
-
-            LocalTime time = layout.getTime(y);
-
-            // Now convert the time into a date time and send it to the listener
-            DateTime dateTime = new DateTime(_model.getCurrentDate().getYear(), _model.getCurrentDate().getMonthOfYear(), _model.getCurrentDate().getDayOfMonth(),
-                                             time.getHourOfDay(), time.getMinuteOfHour(), time.getSecondOfMinute(), 0);
-
-            mouseDelegateListener.actionPerformed(resource, dateTime);
         }
     }
 
@@ -255,7 +304,7 @@ public class DaySchedule extends ScheduleView
     {
         return selectedResource;
     }
-    
+
     @Override
     LayoutManager instanceNewLayout(ScheduleModel model)
     {
