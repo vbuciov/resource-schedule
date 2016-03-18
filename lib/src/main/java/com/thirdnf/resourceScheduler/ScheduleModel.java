@@ -2,6 +2,7 @@ package com.thirdnf.resourceScheduler;
 
 import org.jetbrains.annotations.NotNull;
 import org.joda.time.LocalDate;
+import org.joda.time.LocalDateTime;
 import org.joda.time.LocalTime;
 
 /**
@@ -18,16 +19,6 @@ import org.joda.time.LocalTime;
         })
 public interface ScheduleModel
 {
-    //--------------------------------------------------------------------
-    /**
-     * Visit all appointments for the given date time. The Resource Scheduler
-     * uses Joda DateTime rather than Java's DateTime for the flexibility.
-     *
-     * @param visitor (not null) The visitor to visit with every appointment for
-     * the given day
-     * @param dateTime (not null) The day to visit the appointments for.
-     */
-    void visitAppointments(AppointmentVisitor visitor, @NotNull LocalDate dateTime);
 
     //--------------------------------------------------------------------
     /**
@@ -36,9 +27,33 @@ public interface ScheduleModel
      *
      * @param visitor (not null) The visitor to visit with every appointment for
      * the given day
-     * @param dateTime (not null) The day to visit the appointments for.
+     * @param init The init of day to visit the appointments for.
+     * @param limit (not null) The limit day to visit the appointments for.
      */
-    void visitResources(ResourceVisitor visitor, @NotNull LocalDate dateTime);
+    void visitAppointments(AppointmentVisitor visitor,
+                           @NotNull LocalDateTime init,
+                           @NotNull LocalDateTime limit);
+    
+    //--------------------------------------------------------------------
+    /**
+     * Determines if appointment is in the current date time
+     * uses Joda DateTime rather than Java's DateTime for the flexibility.
+     *
+     * @param value  The appoint to comprobe
+     * @return Indicates wherever or not
+     */
+    boolean isInCurrentDateRange (Appointment value);
+
+    //--------------------------------------------------------------------
+    /**
+     * Visit all appointments for the given date time. The Resource Scheduler
+     * uses Joda DateTime rather than Java's DateTime for the flexibility.
+     *
+     * @param visitor (not null) The visitor to visit with every appointment for
+     * the given day
+     * @param limit (not null) The limit day to visit the resources for.
+     */
+    void visitResources(ResourceVisitor visitor, @NotNull LocalDate limit);
 
     //--------------------------------------------------------------------
     /**
@@ -94,6 +109,22 @@ public interface ScheduleModel
 
     //--------------------------------------------------------------------
     /**
+     * Get the current date with the end time
+     *
+     * @return the Init Date Time
+     */
+    LocalDateTime getInitDate();
+
+    //--------------------------------------------------------------------
+    /**
+     * Get the current date with the end time
+     *
+     * @return the Final Date Time
+     */
+    LocalDateTime getEndDate();
+
+    //--------------------------------------------------------------------
+    /**
      * Get the current size of Resources
      *
      * @return the size
@@ -111,6 +142,7 @@ public interface ScheduleModel
     //--------------------------------------------------------------------
     /**
      * Get the index of Resource
+     *
      * @param value Resource
      * @return the index
      */
@@ -119,6 +151,7 @@ public interface ScheduleModel
     //--------------------------------------------------------------------
     /**
      * Get the index of Appointment
+     *
      * @param value Appointment
      * @return the index
      */
@@ -140,7 +173,7 @@ public interface ScheduleModel
      * @param value The Resource to set at index
      * @param index The index
      */
-    void setResourceAt(Resource value, int index);
+    //void setResourceAt(Resource value, int index);
 
     //--------------------------------------------------------------------
     /**
@@ -158,7 +191,7 @@ public interface ScheduleModel
      * @param value The Appointment to set at index
      * @param index The index
      */
-    void setAppointmentAt(Appointment value, int index);
+    //void setAppointmentAt(Appointment value, int index);
 
     //--------------------------------------------------------------------
     /**

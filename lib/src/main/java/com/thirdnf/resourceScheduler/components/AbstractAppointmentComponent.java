@@ -16,7 +16,6 @@ import java.awt.event.MouseListener;
 import javax.swing.JComponent;
 import javax.swing.event.MouseInputListener;
 import org.joda.time.LocalDateTime;
-import org.joda.time.LocalTime;
 import org.joda.time.Period;
 
 /**
@@ -310,15 +309,15 @@ public abstract class AbstractAppointmentComponent extends JComponent implements
     public void componentMoved(int x, int y, ScheduleView container)
     {
         DayScheduleLayout layout = (DayScheduleLayout) container.getLayout();
-
         Resource resource = null;
         int columns = layout.getColumnCount();
         int x1 = layout.getX(0);
+        int x2 = 0;
 
         //While not found a resource
         for (int i = 0; i < columns && resource == null; ++i)
         {
-            int x2 = layout.getX(i + 1);
+            x2 = layout.getX(i + 1);
             if (x > x1 && x < x2)
                 resource = layout.getResource(i);
             x1 = x2;
@@ -328,14 +327,15 @@ public abstract class AbstractAppointmentComponent extends JComponent implements
         if (resource != null && _appointment.getResource() != resource)
             _appointment.setResource(resource);
 
-        LocalTime start_time = layout.getTime(y);
-
-        _appointment.setDateTime(new LocalDateTime(_appointment.getDateTime().getYear(),
-                                                   _appointment.getDateTime().getMonthOfYear(),
-                                                   _appointment.getDateTime().getDayOfMonth(),
+        LocalDateTime start_time = layout.getTime(y);
+        LocalDateTime start_datetime = _appointment.getDateTime();
+ 
+        _appointment.setDateTime(new LocalDateTime(start_datetime.getYear(),
+                                                   start_datetime.getMonthOfYear(),
+                                                   start_datetime.getDayOfMonth(),
                                                    start_time.getHourOfDay(),
                                                    start_time.getMinuteOfHour(),
-                                                   start_time.getSecondOfMinute(), 0));
+                                                   start_time.getSecondOfMinute()));
 
         if (container.getModel() instanceof AbstractScheduleModel)
             ((AbstractScheduleModel) container.getModel()).fireAppointmentsUpdated(container.getModel().indexOf(_appointment));
@@ -345,16 +345,11 @@ public abstract class AbstractAppointmentComponent extends JComponent implements
     public void componentResizedNorth(int y, ScheduleView container)
     {
         DayScheduleLayout layout = (DayScheduleLayout) container.getLayout();
-        LocalTime start_time = layout.getTime(y);
-        LocalDateTime end_time = _appointment.getDateTime().plus(_appointment.getDuration().toPeriod());
-
-        _appointment.setDateTime(new LocalDateTime(_appointment.getDateTime().getYear(),
-                                                   _appointment.getDateTime().getMonthOfYear(),
-                                                   _appointment.getDateTime().getDayOfMonth(),
-                                                   start_time.getHourOfDay(),
-                                                   start_time.getMinuteOfHour(),
-                                                   start_time.getSecondOfMinute()));
-        _appointment.setDuration(Period.fieldDifference(start_time, end_time.toLocalTime()).toStandardDuration());
+        LocalDateTime new_time = layout.getTime(y);
+        LocalDateTime end_datetime = _appointment.getDateTime().plus(_appointment.getDuration().toPeriod());
+     
+        _appointment.setDateTime(new_time);
+        _appointment.setDuration(Period.fieldDifference(new_time, end_datetime).toStandardDuration());
 
         if (container.getModel() instanceof AbstractScheduleModel)
             ((AbstractScheduleModel) container.getModel()).fireAppointmentsUpdated(container.getModel().indexOf(_appointment));
@@ -365,16 +360,10 @@ public abstract class AbstractAppointmentComponent extends JComponent implements
     public void componentResizedSouth(int y, ScheduleView container)
     {
         DayScheduleLayout layout = (DayScheduleLayout) container.getLayout();
-        LocalTime start_time = _appointment.getDateTime().toLocalTime();
-        LocalTime end_time = layout.getTime(y);
-
-        _appointment.setDateTime(new LocalDateTime(_appointment.getDateTime().getYear(),
-                                                   _appointment.getDateTime().getMonthOfYear(),
-                                                   _appointment.getDateTime().getDayOfMonth(),
-                                                   start_time.getHourOfDay(),
-                                                   start_time.getMinuteOfHour(),
-                                                   start_time.getSecondOfMinute()));
-        _appointment.setDuration(Period.fieldDifference(start_time, end_time).toStandardDuration());
+        LocalDateTime start_datetime = _appointment.getDateTime();
+        LocalDateTime new_time = layout.getTime(y);
+        
+        _appointment.setDuration(Period.fieldDifference(start_datetime, new_time).toStandardDuration());
 
         if (container.getModel() instanceof AbstractScheduleModel)
             ((AbstractScheduleModel) container.getModel()).fireAppointmentsUpdated(container.getModel().indexOf(_appointment));

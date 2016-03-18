@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.jetbrains.annotations.NotNull;
 import org.joda.time.LocalDate;
+import org.joda.time.LocalDateTime;
 
 /**
  *
@@ -39,22 +40,22 @@ public class DefaultScheduleModel extends AbstractScheduleModel
 
     //--------------------------------------------------------------------
     @Override
-    public void visitAppointments(AppointmentVisitor visitor, @NotNull LocalDate date)
+    public void visitAppointments(AppointmentVisitor visitor,
+                                  @NotNull LocalDateTime init,
+                                  @NotNull LocalDateTime limit)
     {
         for (Appointment appointment : Appointments)
         {
-            LocalDate appointmentDate = appointment.getDateTime().toLocalDate();
-            if (!appointmentDate.equals(date))
-            {
+            if (!isInDateRange(appointment, init, limit))
                 continue;
-            }
+            
             visitor.visitedAppointment(appointment);
         }
     }
 
     //--------------------------------------------------------------------
     @Override
-    public void visitResources(ResourceVisitor visitor, @NotNull LocalDate date)
+    public void visitResources(ResourceVisitor visitor, @NotNull LocalDate limit)
     {
         for (Resource resource : Resources)
         {
@@ -96,6 +97,30 @@ public class DefaultScheduleModel extends AbstractScheduleModel
     }
 
     //--------------------------------------------------------------------
+    /**
+     * Our model has been told to add a resource to its database. This method
+     * will add the resource to the underlying database and then trigger a
+     * redraw to any components using this model.
+     *
+     * @param resource (not null) Resource to add
+     * @param index Position to add the resource, -1 indicates that it should be
+     * added a the end.
+     */
+    public void addResource(@NotNull Resource resource, int index)
+    {
+        if (index < 0 || index >= Resources.size())
+        {
+            Resources.add(resource);
+            index = Resources.size() - 1;
+        }
+
+        else
+            Resources.add(index, resource);
+
+        fireResourcesAdded(index);
+    }
+
+    //--------------------------------------------------------------------
     public boolean addResources(List<Resource> resources)
     {
         int first;
@@ -122,30 +147,30 @@ public class DefaultScheduleModel extends AbstractScheduleModel
 
         return index;
     }
-    
+
     //--------------------------------------------------------------------
     public void deleteResource(@NotNull Resource resource)
     {
         int index = Resources.indexOf(resource);
-       
+
         //First remove the wrapper component
         fireResourcesRemoved(index);
-        
-         Resources.remove(index);
+
+        Resources.remove(index);
     }
 
     //--------------------------------------------------------------------
     public void deleteAppointment(@NotNull Appointment appointment)
     {
         int index = Appointments.indexOf(appointment);
-       
-         //First remove the wrapper component
+
+        //First remove the wrapper component
         fireAppointmentsRemoved(index);
-        
-         // Remove it from our list
+
+        // Remove it from our list
         Appointments.remove(index);
     }
-    
+
     //--------------------------------------------------------------------
     public Resource getResourceAt(int index)
     {

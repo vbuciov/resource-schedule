@@ -262,7 +262,7 @@ public class ResourceDialog extends JDialog
         label1 = new JLabel();
         _titleField = new JTextField();
         label2 = new JLabel();
-        _colorSelect = new JComboBox();
+        _colorSelect = new JComboBox<Color>();
         label3 = new JLabel();
         panel1 = new JPanel();
         label4 = new JLabel();

@@ -8,6 +8,7 @@ import org.joda.time.LocalTime;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
+import org.joda.time.LocalDateTime;
 
 /**
  * A example model, has its database hard coded and it is only capable of
@@ -54,41 +55,43 @@ public class ExampleScheduleModel extends AbstractScheduleModel
         Appointments.add(ExampleAppointment.create("Appointment5", Blue, Sally, new LocalTime(10, 45, 0), 30));
         Appointments.add(ExampleAppointment.create("Appointment6", Green, Sally, new LocalTime(12, 30, 0), 40));
         Appointments.add(ExampleAppointment.create("Appointment7", Blue, Freddy, new LocalTime(13, 0, 0), 50));
+        Appointments.add(ExampleAppointment.create("Appointment8", Blue, Freddy, Tomorrow, new LocalTime(13, 0, 0), 50));
     }
-    
+
     public ExampleScheduleModel()
     {
         //super(new LocalDate(), new LocalTime(8, 0, 0), new LocalTime(23, 59, 59));
         //super(new LocalDate(), new LocalTime(0, 0, 0), new LocalTime(23, 44, 00));
         //super(new LocalDate(), new LocalTime(9, 0, 0), new LocalTime(21, 00, 00));
-         //super(new LocalDate(), new LocalTime(0, 0, 0), new LocalTime(23, 45, 0));
+        //super(new LocalDate(), new LocalTime(0, 0, 0), new LocalTime(23, 45, 0));
     }
 
     //--------------------------------------------------------------------
     @Override
-    public void visitAppointments(AppointmentVisitor visitor, @NotNull LocalDate date)
+    public void visitAppointments(AppointmentVisitor visitor, 
+                                  @NotNull LocalDateTime init,
+                                  @NotNull LocalDateTime limit)
     {
         for (Appointment appointment : Appointments)
         {
-            LocalDate appointmentDate = appointment.getDateTime().toLocalDate();
-            if (!appointmentDate.equals(date))
-            {
+            if (!isInDateRange(appointment, init, limit))
                 continue;
-            }
+            
             visitor.visitedAppointment(appointment);
         }
     }
 
     //--------------------------------------------------------------------
     @Override
-    public void visitResources(ResourceVisitor visitor, @NotNull LocalDate date)
+    public void visitResources(ResourceVisitor visitor, @NotNull LocalDate limit)
     {
         List<Resource> resources;
-        if (date.equals(Today))
+        
+        if (limit.equals(Today))
         {
             resources = TodayResources;
         }
-        else if (date.equals(Tomorrow))
+        else if (limit.equals(Tomorrow))
         {
             resources = TomorrowResources;
         }
@@ -136,10 +139,14 @@ public class ExampleScheduleModel extends AbstractScheduleModel
             return;
         }
 
-        resources.add(resource);
-
-        if (index < 0 || index > resources.size())
+        if (index < 0 || index >= resources.size())
+        {
+            resources.add(resource);
             index = resources.size() - 1;
+        }
+        
+        else
+            resources.add(index, resource);
 
         fireResourcesAdded(index);
     }

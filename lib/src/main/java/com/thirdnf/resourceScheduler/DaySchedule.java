@@ -14,10 +14,13 @@ import java.awt.event.MouseEvent;
 import java.awt.geom.Rectangle2D;
 import java.util.Iterator;
 import javax.swing.BorderFactory;
+import org.jetbrains.annotations.NotNull;
 import org.joda.time.Duration;
 import org.joda.time.LocalTime;
 import org.joda.time.Period;
 import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
+import org.joda.time.LocalDateTime;
 
 /**
  * Panel to show a given day.
@@ -32,10 +35,10 @@ import org.joda.time.DateTime;
  */
 public class DaySchedule extends ScheduleView
 {
+    public static final Duration INCREMENTS = Duration.standardMinutes(15);
 
     private Appointment selectedAppointment;
     private Resource selectedResource;
-    private final Duration _increments;
 
     //--------------------------------------------------------------------
     /**
@@ -44,7 +47,6 @@ public class DaySchedule extends ScheduleView
      */
     public DaySchedule()
     {
-        _increments = Duration.standardMinutes(15);
         setBackground(Color.white);
         setOpaque(true);
         setBorder(BorderFactory.createEtchedBorder());
@@ -70,8 +72,8 @@ public class DaySchedule extends ScheduleView
             DayScheduleLayout layout = (DayScheduleLayout) getLayout();
             int leftHeader = layout.getX(0);
             int columnCount = layout.getColumnCount();
-            LocalTime _startTime = _model.getStartTime();
-            LocalTime _endTime = _model.getEndTime();
+            LocalDateTime _startTime = _model.getInitDate();
+            LocalDateTime _endTime = _model.getEndDate();
 
             // Color in times which they are not available.  This goes through and basically draws from the
             //  top to the first appointment, then from that appointment to the next and so forth and so on
@@ -107,12 +109,12 @@ public class DaySchedule extends ScheduleView
                 }
             }
 
-            Period period = _increments.toPeriod();
+            Period period = INCREMENTS.toPeriod();
             boolean back2AM = false;
 
-            for (LocalTime time = _startTime; time.compareTo(_endTime) <= 0; time = time.plus(period))
+            for (LocalDateTime time = _startTime; time.compareTo(_endTime) <= 0; time = time.plus(period))
             {
-                Integer y = layout.getY(time);
+                Integer y = layout.getY(time.toLocalTime());
                 if (y != null)
                 {
                     boolean onTheHour = time.getMinuteOfHour() == 0;
@@ -143,7 +145,7 @@ public class DaySchedule extends ScheduleView
                 if (!back2AM)
                 {
                     //Only when the final period is 23, can back to origin time
-                    if (time.plus(period).compareTo(LocalTime.MIDNIGHT) == 0)
+                    if (time.plus(period).toLocalTime().compareTo(LocalTime.MIDNIGHT) == 0)
                     {
                         back2AM = true;
                         period = Period.fieldDifference(time, _endTime);
@@ -186,11 +188,11 @@ public class DaySchedule extends ScheduleView
             switch (e.getType())
             {
                 case ScheduleModelTimeEvent.START_CHANGED:
-                    layout.setStartTime(e.getNew_value());
+                    layout.setStartTime(_model.getInitDate());
                     break;
 
                 case ScheduleModelTimeEvent.END_CHANGED:
-                    layout.setEndTime(e.getNew_value());
+                    layout.setEndTime(_model.getEndDate());
                     break;
             }
 
@@ -284,7 +286,7 @@ public class DaySchedule extends ScheduleView
                     return;
                 }
 
-                LocalTime time = layout.getTime(y);
+                LocalDateTime time = layout.getTime(y);
 
                 // Now convert the time into a date time and send it to the listener
                 DateTime dateTime = new DateTime(_model.getCurrentDate().getYear(), _model.getCurrentDate().getMonthOfYear(), _model.getCurrentDate().getDayOfMonth(),
@@ -294,20 +296,39 @@ public class DaySchedule extends ScheduleView
             }
         }
     }
+    
 
+    //--------------------------------------------------------------------
     public Appointment getSelectedAppointment()
     {
         return selectedAppointment;
     }
 
+    //--------------------------------------------------------------------
     public Resource getSelectedResource()
     {
         return selectedResource;
     }
+    
+    //--------------------------------------------------------------------
+    @Override
+    public void setDate (LocalDate value)
+    {
+        super.setDate(value);
+        
+        if (getLayout() instanceof DayScheduleLayout)
+        {
+            DayScheduleLayout layout = (DayScheduleLayout) getLayout();
+            layout.setStartTime(_model.getInitDate());
+            layout.setEndTime(_model.getEndDate());
+        }
+        
+    }
 
+    //--------------------------------------------------------------------
     @Override
     LayoutManager instanceNewLayout(ScheduleModel model)
     {
-        return new DayScheduleLayout(model.getStartTime(), model.getEndTime());
+        return new DayScheduleLayout(model.getInitDate(), model.getEndDate());
     }
 }

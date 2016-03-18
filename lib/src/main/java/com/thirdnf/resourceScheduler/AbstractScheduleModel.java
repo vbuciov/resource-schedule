@@ -4,6 +4,7 @@ import org.jetbrains.annotations.NotNull;
 import org.joda.time.LocalDate;
 
 import javax.swing.event.EventListenerList;
+import org.joda.time.LocalDateTime;
 import org.joda.time.LocalTime;
 
 /**
@@ -47,6 +48,36 @@ public abstract class AbstractScheduleModel implements ScheduleModel
         this.start = start;
         this.end = end;
     }
+    
+    //--------------------------------------------------------------------
+    public boolean isInCurrentDateRange (Appointment value)
+    {
+         LocalDateTime startDateTime = value.getDateTime();
+            LocalDateTime endDateTime = value.getDateTime().plus(value.getDuration());
+        
+        return startDateTime.compareTo(getEndDate()) < 0 ||
+                    endDateTime.compareTo(getInitDate()) > 0;
+    }
+    
+     //--------------------------------------------------------------------
+ 
+    /**
+     *
+     * @param value The appointment
+     * @param init The init Date Time
+     * @param limit The limit Date Time
+     * @return
+     */
+        public boolean isInDateRange (Appointment value, 
+                                  LocalDateTime init,
+                                   LocalDateTime limit)
+    {
+         LocalDateTime startDateTime = value.getDateTime();
+            LocalDateTime endDateTime = value.getDateTime().plus(value.getDuration());
+        
+        return startDateTime.compareTo(limit) < 0 ||
+                    endDateTime.compareTo(init) > 0;
+    }
 
     //--------------------------------------------------------------------
     @Override
@@ -56,7 +87,6 @@ public abstract class AbstractScheduleModel implements ScheduleModel
     }
 
     //--------------------------------------------------------------------
-    @Override
     public void setCurrentDate(LocalDate value)
     {
         LocalDate oldValue = _currentDate;
@@ -100,6 +130,45 @@ public abstract class AbstractScheduleModel implements ScheduleModel
 
         if (oldValue != null && !value.equals(oldValue))
             fireEndTimeChange(oldValue, value);
+    }
+
+    //--------------------------------------------------------------------
+    /**
+     * Get the current date with the end time
+     *
+     * @return the Init Date Time
+     */
+    public LocalDateTime getInitDate()
+    {
+        LocalDateTime init_value = new LocalDateTime(_currentDate.getYear(),
+                                                     _currentDate.getMonthOfYear(),
+                                                     _currentDate.getDayOfMonth(),
+                                                     start.getHourOfDay(),
+                                                     start.getMinuteOfHour(),
+                                                     start.getSecondOfMinute());
+
+        return init_value;
+    }
+
+    //--------------------------------------------------------------------
+    /**
+     * Get the current date with the end time
+     *
+     * @return the Fina Date Time
+     */
+    public LocalDateTime getEndDate()
+    {
+        LocalDate the_date = end.equals(LocalTime.MIDNIGHT)
+                ? _currentDate.plusDays(1) : _currentDate;
+
+        LocalDateTime final_value = new LocalDateTime(the_date.getYear(),
+                                                      the_date.getMonthOfYear(),
+                                                      the_date.getDayOfMonth(),
+                                                      end.getHourOfDay(),
+                                                      end.getMinuteOfHour(),
+                                                      end.getSecondOfMinute());
+
+        return final_value;
     }
 
     //--------------------------------------------------------------------

@@ -19,28 +19,31 @@ import org.joda.time.*;
  * @author Joshua Gerth - jgerth@thirdnf.com
  */
 @SuppressWarnings(
-{
-    "FieldCanBeLocal"
-})
+        {
+            "FieldCanBeLocal"
+        })
 public class AppointmentDialog extends JDialog
 {
-    private LocalTime StartTime;
-    private LocalTime EndTime;
-    private static final Duration Increment = Duration.standardMinutes(15);
+
+    private LocalDateTime StartTime;
+    private LocalDateTime EndTime;
+    private Duration Increment;
     private LocalDate _date;
     private ExampleAppointment _appointment;
 
     private IOkayListener _listener;
 
     public AppointmentDialog(@NotNull Frame owner, @NotNull LocalDate date,
-                             @NotNull ExampleScheduleModel model)
+                             @NotNull ExampleScheduleModel model,
+                             Duration theIncrement)
     {
         super(owner);
         initComponents();
         _date = date;
         _appointment = null;
-        StartTime = model.getStartTime();
-        EndTime = model.getEndTime();
+        StartTime = model.getInitDate();
+        EndTime = model.getEndDate();
+        Increment = theIncrement;
 
         initialize(model);
 
@@ -48,21 +51,23 @@ public class AppointmentDialog extends JDialog
     }
 
     public AppointmentDialog(@NotNull Frame owner, @NotNull Resource resource, @NotNull DateTime dateTime,
-                             @NotNull ExampleScheduleModel model)
+                             @NotNull ExampleScheduleModel model,
+                             Duration theIncrement)
     {
         super(owner);
         initComponents();
         _date = dateTime.toLocalDate();
         _appointment = null;
-        StartTime = model.getStartTime();
-        EndTime = model.getEndTime();
+        StartTime = model.getInitDate();
+        EndTime = model.getEndDate();
+        Increment = theIncrement;
 
         initialize(model);
-        LocalTime last = null;
-        LocalTime localTime = dateTime.toLocalTime();
+        LocalDateTime last = null;
+        LocalDateTime localTime = dateTime.toLocalDateTime();
         for (int index = 0; index < _startTimeCombo.getItemCount(); ++index)
         {
-            LocalTime time = (LocalTime) _startTimeCombo.getItemAt(index);
+            LocalDateTime time = (LocalDateTime) _startTimeCombo.getItemAt(index);
             if (time.compareTo(localTime) > 0)
             {
                 if (last != null)
@@ -77,21 +82,26 @@ public class AppointmentDialog extends JDialog
     }
 
     public AppointmentDialog(@NotNull Frame owner, @NotNull ExampleAppointment appointment,
-                             @NotNull ExampleScheduleModel model)
+                             @NotNull ExampleScheduleModel model,
+                             Duration theIncrement)
     {
         super(owner);
         initComponents();
         _date = appointment.getDateTime().toLocalDate();
         _appointment = appointment;
-        StartTime = model.getStartTime();
-        EndTime = model.getEndTime();
+        StartTime = model.getInitDate();
+        EndTime = model.getEndDate();
+        Increment = theIncrement;
+        LocalDateTime timeToAdjust = _appointment.getDateTime();
+        int minutes = (int) Increment.getStandardSeconds() / 60;
+        int scale = timeToAdjust.getMinuteOfHour() / minutes;
 
         initialize(model);
 
         _titleField.setText(_appointment.getTitle());
         _categoryCombo.setSelectedItem(_appointment.getCategory());
         _resourceCombo.setSelectedItem(_appointment.getResource());
-        _startTimeCombo.setSelectedItem(_appointment.getDateTime().toLocalTime());
+        _startTimeCombo.setSelectedItem(timeToAdjust.withMinuteOfHour(scale * minutes).withSecondOfMinute(0).withMillisOfSecond(0));
         _durationSpinner.setValue((int) (_appointment.getDuration().getStandardSeconds() / 60));
 
         setTitle("Edit Appointment");
@@ -104,21 +114,21 @@ public class AppointmentDialog extends JDialog
         _startTimeCombo.setRenderer(new TimeCellRenderer());
         boolean back2AM = false;
         Period period = Increment.toPeriod();
-        for (LocalTime time = StartTime; time.compareTo(EndTime) <= 0; time = time.plus(period))
+        for (LocalDateTime time = StartTime; time.compareTo(EndTime) <= 0; time = time.plus(period))
         {
             _startTimeCombo.addItem(time);
             if (!back2AM)
+            {
+                //Only when the final period is 23, can back to origin time
+                if (time.plus(period).toLocalTime().compareTo(LocalTime.MIDNIGHT) == 0)
                 {
-                    //Only when the final period is 23, can back to origin time
-                    if (time.plus(period).compareTo(LocalTime.MIDNIGHT) == 0)
-                    {
-                        back2AM = true;
-                        period = Period.fieldDifference(time, EndTime);
-                    }
+                    back2AM = true;
+                    period = Period.fieldDifference(time, EndTime);
                 }
+            }
 
-                else
-                    break;
+            else
+                break;
         }
 
         model.visitResources(new ResourceVisitor()
@@ -154,7 +164,7 @@ public class AppointmentDialog extends JDialog
             String title = _titleField.getText().trim();
             ExampleResource resource = (ExampleResource) _resourceCombo.getSelectedItem();
             ExampleCategory category = (ExampleCategory) _categoryCombo.getSelectedItem();
-            LocalTime startTime = (LocalTime) _startTimeCombo.getSelectedItem();
+            LocalDateTime startTime = (LocalDateTime) _startTimeCombo.getSelectedItem();
             int duration = (Integer) _durationSpinner.getValue();
 
             if (_appointment == null)
@@ -167,9 +177,10 @@ public class AppointmentDialog extends JDialog
                 _appointment.setResource(resource);
                 _appointment.setCategory(category);
             }
-            _appointment.setDateTime(new LocalDateTime(_date.year().get(), _date.monthOfYear().get(),
+            /*_appointment.setDateTime(new LocalDateTime(_date.year().get(), _date.monthOfYear().get(),
                                                        _date.dayOfMonth().get(), startTime.getHourOfDay(),
-                                                       startTime.getMinuteOfHour(), startTime.getSecondOfMinute(), 0));
+                                                       startTime.getMinuteOfHour(), startTime.getSecondOfMinute(), 0));*/
+            _appointment.setDateTime(startTime);
             _appointment.setDuration(Duration.standardMinutes(duration));
 
             _listener.handleOkay(_appointment);
@@ -207,7 +218,7 @@ public class AppointmentDialog extends JDialog
                                                       int index, boolean isSelected, boolean cellHasFocus)
         {
             super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-            setText(((LocalTime) value).toString("h:mm a"));
+            setText(((LocalDateTime) value).toString("h:mm a"));
 
             return this;
         }

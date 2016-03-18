@@ -12,6 +12,7 @@ import com.jgoodies.forms.layout.CellConstraints;
 import com.jgoodies.forms.layout.FormLayout;
 
 import com.thirdnf.resourceScheduler.Appointment;
+import com.thirdnf.resourceScheduler.DaySchedule;
 import com.thirdnf.resourceScheduler.Resource;
 import com.thirdnf.resourceScheduler.ScheduleListener;
 import com.thirdnf.resourceScheduler.Scheduler;
@@ -208,7 +209,7 @@ public class ExampleScheduler extends JFrame
         }
         ExampleAppointment exampleAppointment = (ExampleAppointment) appointment;
 
-        AppointmentDialog dialog = new AppointmentDialog(this, exampleAppointment, bsScheduler);
+        AppointmentDialog dialog = new AppointmentDialog(this, exampleAppointment, bsScheduler, DaySchedule.INCREMENTS);
         dialog.setOkayListener(new AppointmentDialog.IOkayListener()
         {
             @Override
@@ -309,7 +310,8 @@ public class ExampleScheduler extends JFrame
     private void handleAddAppointment()
     {
         LocalDate date = _todayRadio.isSelected() ? Today : Tomorrow;
-        AppointmentDialog dialog = new AppointmentDialog(this, date, bsScheduler);
+
+        AppointmentDialog dialog = new AppointmentDialog(this, date, bsScheduler, DaySchedule.INCREMENTS);
         dialog.setOkayListener(new AppointmentDialog.IOkayListener()
         {
             @Override
@@ -324,7 +326,8 @@ public class ExampleScheduler extends JFrame
 
     private void handleAddAppointment(@Nullable Resource resource, @NotNull DateTime dateTime)
     {
-        AppointmentDialog dialog = new AppointmentDialog(this, resource, dateTime, bsScheduler);
+       
+        AppointmentDialog dialog = new AppointmentDialog(this, resource, dateTime, bsScheduler, DaySchedule.INCREMENTS);
         dialog.setOkayListener(new AppointmentDialog.IOkayListener()
         {
             @Override

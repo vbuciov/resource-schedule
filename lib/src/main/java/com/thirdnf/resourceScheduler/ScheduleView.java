@@ -28,6 +28,7 @@ import javax.swing.JPanel;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joda.time.LocalDate;
+import org.joda.time.LocalDateTime;
 
 /**
  *
@@ -35,7 +36,6 @@ import org.joda.time.LocalDate;
  */
 public abstract class ScheduleView extends JPanel implements ScheduleModelListener, MouseListener
 {
-
     protected ScheduleModel _model;
     protected ScheduleListener mouseDelegateListener = null;
     private BasicComponentFactory _componentFactory;
@@ -364,7 +364,8 @@ public abstract class ScheduleView extends JPanel implements ScheduleModelListen
                 addWrapperAppointment(appointment);
                 return true;
             }
-        }, _model.getCurrentDate());
+        }, _model.getInitDate()
+         , _model.getEndDate());
 
         // Force recalculate the layout to redraw
         revalidate();
@@ -392,7 +393,8 @@ public abstract class ScheduleView extends JPanel implements ScheduleModelListen
                 addWrapperAppointment(appointment);
                 return true;
             }
-        }, _model.getCurrentDate());
+        }, _model.getInitDate()
+         , _model.getEndDate());
 
         // Force recalculate the layout to redraw
         revalidate();
@@ -420,7 +422,8 @@ public abstract class ScheduleView extends JPanel implements ScheduleModelListen
                 addWrapperAppointment(appointment);
                 return true;
             }
-        }, e.getNew_value());
+        }, _model.getInitDate()
+         , _model.getEndDate());
 
         // Force recalculate the layout to redraw
         revalidate();
@@ -441,6 +444,8 @@ public abstract class ScheduleView extends JPanel implements ScheduleModelListen
             if (wrapp != null)
                 wrapp.repaint();
         }
+        
+        revalidate();
 
         // We have added a column so we need to repaint our background as well
         repaint();
@@ -491,8 +496,9 @@ public abstract class ScheduleView extends JPanel implements ScheduleModelListen
         for (int i = e.getFirtIndex(); i <= e.getLastIndex(); i++)
         {
             Appointment theNew = _model.getAppointmentAt(i);
-
-            if (theNew.getDateTime().toLocalDate().equals(_model.getCurrentDate()))
+            
+            //Draw the appointment only if is in the CurrentDate Range
+            if (_model.isInCurrentDateRange(theNew))
             {
                 wrapp = addWrapperAndGetAppointment(theNew);
 
@@ -539,7 +545,8 @@ public abstract class ScheduleView extends JPanel implements ScheduleModelListen
             Component component = getAppointmentComponent(actual);
             if (component != null)
             {
-                if (actual.getDateTime().toLocalDate().isEqual(_model.getCurrentDate()))
+                if (actual.getDateTime().toLocalDate().isEqual(_model.getCurrentDate()) ||
+                        actual.getDateTime().plus(actual.getDuration().toPeriod()).toLocalDate().isEqual(_model.getCurrentDate()))
                     component.repaint();
 
                 else

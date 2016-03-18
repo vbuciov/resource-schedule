@@ -268,6 +268,11 @@ public class Scheduler extends JPanel implements Printable
         return PAGE_EXISTS;
     }
 
+    public DaySchedule getCurrentView()
+    {
+        return currentScheduleView;
+    }
+    
     @Override
     public LayoutManager getLayout()
     {

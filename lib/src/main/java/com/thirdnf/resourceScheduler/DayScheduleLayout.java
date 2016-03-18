@@ -11,6 +11,7 @@ import org.joda.time.Period;
 import java.awt.*;
 import java.util.*;
 import java.util.List;
+import org.joda.time.LocalDateTime;
 
 /**
  * SchedulerLayout is responsible for laying out the components on a time grid.
@@ -23,16 +24,14 @@ import java.util.List;
         })
 public class DayScheduleLayout implements LayoutManager2
 {
-
-    // Location map telling us which column each appointment belongs to.
-    private List<Resource> _resources;
+    private final List<Resource> _resources;
 
     // Space to give to the top header.
     private int _topHeader = 25;
     private int _leftHeader = 75;
     private int width, height;
 
-    private LocalTime _startTime, _endTime;
+    private LocalDateTime _startTime, _endTime;
 
     private long _totalSeconds;
 
@@ -79,7 +78,8 @@ public class DayScheduleLayout implements LayoutManager2
      * @param startTime (not null) Time of the day to start.
      * @param endTime (not null) Time of the day to end.
      */
-    public DayScheduleLayout(@NotNull LocalTime startTime, @NotNull LocalTime endTime)
+    public DayScheduleLayout(@NotNull LocalDateTime startTime, 
+                             @NotNull LocalDateTime endTime)
     {
         setRangeTime(startTime, endTime);
 
@@ -93,7 +93,7 @@ public class DayScheduleLayout implements LayoutManager2
     }
 
     //--------------------------------------------------------------------
-    private void setRangeTime(LocalTime start, LocalTime end)
+    private void setRangeTime(LocalDateTime start, LocalDateTime end)
     {
         _startTime = start;
         _endTime = end;
@@ -104,7 +104,7 @@ public class DayScheduleLayout implements LayoutManager2
     }
 
     //--------------------------------------------------------------------
-    public void setStartTime(LocalTime value)
+    public void setStartTime(LocalDateTime value)
     {
         this._startTime = value;
         // Total number of seconds we are representing
@@ -112,7 +112,7 @@ public class DayScheduleLayout implements LayoutManager2
     }
 
     //--------------------------------------------------------------------
-    public void setEndTime(LocalTime value)
+    public void setEndTime(LocalDateTime value)
     {
         this._endTime = value;
         // Total number of seconds we are representing
@@ -262,8 +262,6 @@ public class DayScheduleLayout implements LayoutManager2
     @Override
     public Dimension preferredLayoutSize(Container parent)
     {
-        // TODO - Calculate this for real
-        //return new Dimension(400, 300);
         synchronized (parent.getTreeLock())
         {
             Insets insets = parent.getInsets();
@@ -297,38 +295,12 @@ public class DayScheduleLayout implements LayoutManager2
             return new Dimension(insets.left + insets.right + ncols * w + (ncols - 1) * hgap,
                                  insets.top + insets.bottom + nrows * h + (nrows - 1) * vgap);
         }
-
-        /*synchronized (parent.getTreeLock())
-         {
-         Insets insets = parent.getInsets();
-         int ncomponents = parent.getComponentCount();
-         int w = 0;
-         int h = 0;
-
-         for (int i = 0; i < ncomponents; i++)
-         {
-         Component comp = parent.getComponent(i);
-         Dimension d = comp.getPreferredSize();
-         if (d.width > w)
-         {
-         w = d.width;
-         }
-         if (d.height > h)
-         {
-         h = d.height;
-         }
-         }
-         return new Dimension(insets.left + insets.right + w + hgap * 2,
-         insets.top + insets.bottom + h + vgap * 2);
-         }*/
     }
 
     //--------------------------------------------------------------------
     @Override
     public Dimension minimumLayoutSize(Container parent)
     {
-        // TODO - Calculate this off the minimum height for the fonts and some minimum width
-        // return new Dimension(300, 300);
         synchronized (parent.getTreeLock())
         {
             Insets insets = parent.getInsets();
@@ -362,30 +334,6 @@ public class DayScheduleLayout implements LayoutManager2
             return new Dimension(insets.left + insets.right + ncols * w + (ncols - 1) * hgap,
                                  insets.top + insets.bottom + nrows * h + (nrows - 1) * vgap);
         }
-
-        /*synchronized (parent.getTreeLock())
-         {
-         Insets insets = parent.getInsets();
-         int ncomponents = parent.getComponentCount();
-         int w = 0;
-         int h = 0;
-
-         for (int i = 0; i < ncomponents; i++)
-         {
-         Component comp = parent.getComponent(i);
-         Dimension d = comp.getMinimumSize();
-         if (d.width > w)
-         {
-         w = d.width;
-         }
-         if (d.height > h)
-         {
-         h = d.height;
-         }
-         }
-         return new Dimension(insets.left + insets.right + w + hgap * 2,
-         insets.top + insets.bottom + h + vgap * 2);
-         }*/
     }
 
     //--------------------------------------------------------------------
@@ -421,9 +369,9 @@ public class DayScheduleLayout implements LayoutManager2
             //  column first.  The suppress warnings is here due to a bug/feature in java that can't deal
             //  with generic array creation.
             @SuppressWarnings(
-            {
-                "unchecked"
-            })
+                    {
+                        "unchecked"
+                    })
             List<AbstractAppointmentComponent>[] columns
                     = (List<AbstractAppointmentComponent>[]) new List[columnCount];
 
@@ -469,14 +417,15 @@ public class DayScheduleLayout implements LayoutManager2
     private int layoutComponent(AbstractAppointmentComponent wrap)
     {
         Appointment appointment = wrap.getAppointment();
-        Duration duration = appointment.getDuration();
-        LocalTime time = appointment.getDateTime().toLocalTime();
+        LocalDateTime startDate = appointment.getDateTime();
+        boolean same_day = _startTime.compareTo(startDate) <= 0;
+        Duration duration = same_day?appointment.getDuration(): 
+                appointment.getDuration().minus(
+                Period.fieldDifference(startDate, _endTime.minusDays(1)).toStandardDuration());
         
-        //TODO: Ajustar el tiempo según el día de inicio.
-        int y = getY(time);
+        int y = same_day ? getY(startDate) : getY(_startTime);
         int appointmentWidth = (int) _columnWidth;
         int appointmentHeight = (int) Math.floor(_scale * duration.getStandardSeconds());
-        //TODO: Ajustar la duración según el día de inicio.
 
         Resource resource = appointment.getResource();
         int column = resource == null ? -1 : _resources.indexOf(resource);
@@ -484,7 +433,7 @@ public class DayScheduleLayout implements LayoutManager2
         //  at the moment.
         if (column == -1)
             column = 0;
-        
+
         int x = getX(column);
 
         wrap.setBounds(x + 8, y, appointmentWidth - 16, appointmentHeight);
@@ -529,7 +478,7 @@ public class DayScheduleLayout implements LayoutManager2
      * @param time (not null) Time in question to ask for the y location of.
      * @return The y location on the current panel for the given time.
      */
-    public int getY(@NotNull LocalTime time)
+    public int getY(@NotNull LocalDateTime time)
     {
         // Get the seconds which have passed from the start time to the time they are asking about.
         long seconds
@@ -537,6 +486,27 @@ public class DayScheduleLayout implements LayoutManager2
 
         return _top + _topHeader + (int) (_scale * seconds);
     }
+    
+    
+    //--------------------------------------------------------------------
+    /**
+     * Public method to ask the layout where a given time location should be
+     * placed. I'm not 100% sure if this breaks the abstraction of the layout by
+     * exposing this. To access this the caller needs to get the layout and then
+     * cast it to a ScheduleLayout. Doesn't seem ideal.
+     *
+     * @param time (not null) Time in question to ask for the y location of.
+     * @return The y location on the current panel for the given time.
+     */
+    public int getY(@NotNull LocalTime time)
+    {
+        // Get the seconds which have passed from the start time to the time they are asking about.
+        long seconds
+                = Period.fieldDifference(_startTime.toLocalTime(), time).toStandardDuration().getStandardSeconds();
+
+        return _top + _topHeader + (int) (_scale * seconds);
+    }
+
 
     /**
      * This is under construction so I would not suggest using it. It asks the
@@ -711,13 +681,13 @@ public class DayScheduleLayout implements LayoutManager2
      * @param y Value to translate into a time offset.
      * @return (not null) Time representing the given y
      */
-    public LocalTime getTime(int y)
+    public LocalDateTime getTime(int y)
     {
         // Turn the y into seconds
         int seconds = Math.round((float) (y - (_topHeader + _top)) / _scale);
 
         // Turn seconds into a time after start time
-        return _startTime.plus(Duration.standardSeconds(seconds).toPeriod());
+        return _startTime.plus(Duration.standardSeconds(seconds));
     }
 
     //--------------------------------------------------------------------

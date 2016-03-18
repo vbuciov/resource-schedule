@@ -5,6 +5,7 @@ import com.thirdnf.resourceScheduler.Resource;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joda.time.Duration;
+import org.joda.time.LocalDate;
 import org.joda.time.LocalDateTime;
 import org.joda.time.LocalTime;
 
@@ -15,12 +16,12 @@ import org.joda.time.LocalTime;
  */
 public class ExampleAppointment implements Appointment
 {
+
     private ExampleCategory _category;
     private Resource _resource;
     private String _title;
     private LocalDateTime _dateTime;
     private Duration _duration;
-
 
     public ExampleAppointment(@NotNull String title, ExampleCategory category, ExampleResource resource)
     {
@@ -29,18 +30,15 @@ public class ExampleAppointment implements Appointment
         _resource = resource;
     }
 
-
     public ExampleCategory getCategory()
     {
         return _category;
     }
 
-
     public void setCategory(@NotNull ExampleCategory category)
     {
         _category = category;
     }
-
 
     @NotNull
     @Override
@@ -49,19 +47,16 @@ public class ExampleAppointment implements Appointment
         return _dateTime;
     }
 
-
     @Override
     public Resource getResource()
     {
         return _resource;
     }
 
-
     public void setResource(@NotNull ExampleResource resource)
     {
         _resource = resource;
     }
-
 
     @NotNull
     @Override
@@ -70,12 +65,10 @@ public class ExampleAppointment implements Appointment
         return _duration;
     }
 
-
     public void setDuration(@NotNull Duration duration)
     {
         _duration = duration;
     }
-
 
     @NotNull
     @Override
@@ -83,7 +76,6 @@ public class ExampleAppointment implements Appointment
     {
         return _title;
     }
-
 
     /**
      * Set the title of the appointment.
@@ -95,20 +87,36 @@ public class ExampleAppointment implements Appointment
         _title = title;
     }
 
-
     public void setDateTime(@NotNull LocalDateTime time)
     {
         _dateTime = time;
     }
-
 
     public static ExampleAppointment create(@NotNull String title, @NotNull ExampleCategory category,
                                             @Nullable ExampleResource resource,
                                             @NotNull LocalTime time, int minutes)
     {
         ExampleAppointment appointment = new ExampleAppointment(title, category, resource);
-        LocalDateTime date = new LocalDateTime(ExampleScheduleModel.Today.getYear(), ExampleScheduleModel.Today.getMonthOfYear(), ExampleScheduleModel.Today.getDayOfMonth(),
-                time.getHourOfDay(), time.getMinuteOfHour(), time.getSecondOfMinute(), 0);
+        LocalDateTime date = new LocalDateTime(ExampleScheduleModel.Today.getYear(),
+                                               ExampleScheduleModel.Today.getMonthOfYear(),
+                                               ExampleScheduleModel.Today.getDayOfMonth(),
+                                               time.getHourOfDay(), time.getMinuteOfHour(), time.getSecondOfMinute(), 0);
+        appointment.setDateTime(date);
+        appointment.setDuration(Duration.standardMinutes(minutes));
+
+        return appointment;
+    }
+
+    public static ExampleAppointment create(@NotNull String title, @NotNull ExampleCategory category,
+                                            @Nullable ExampleResource resource,
+                                            LocalDate Day,
+                                            @NotNull LocalTime time, int minutes)
+    {
+        ExampleAppointment appointment = new ExampleAppointment(title, category, resource);
+        LocalDateTime date = new LocalDateTime(Day.getYear(),
+                                               Day.getMonthOfYear(),
+                                               Day.getDayOfMonth(),
+                                               time.getHourOfDay(), time.getMinuteOfHour(), time.getSecondOfMinute(), 0);
         appointment.setDateTime(date);
         appointment.setDuration(Duration.standardMinutes(minutes));
 
