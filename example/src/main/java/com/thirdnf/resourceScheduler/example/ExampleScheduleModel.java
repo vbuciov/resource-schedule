@@ -44,16 +44,19 @@ public class ExampleScheduleModel extends AbstractScheduleModel
         TodayResources.add(Bobby);
         TodayResources.add(Johnny);
         TodayResources.add(Sally);
+        TodayResources.add(Freddy);
 
         // Freddy is not going to be listed for today, but an appointment today is going to be assigned
         //  to Freddy.  The appointment should show up in the first column for the day.
         // Populate some default appointments
         Appointments.add(ExampleAppointment.create("Appointment1", Green, Bobby, new LocalTime(10, 0, 0), 45));
         Appointments.add(ExampleAppointment.create("Appointment2", Blue, Johnny, new LocalTime(13, 0, 0), 75));
-        Appointments.add(ExampleAppointment.create("Appointment3", Blue, Sally, new LocalTime(8, 0, 0), 60));
-        Appointments.add(ExampleAppointment.create("Appointment4", Green, Sally, new LocalTime(8, 45, 0), 120));
-        Appointments.add(ExampleAppointment.create("Appointment5", Blue, Sally, new LocalTime(10, 45, 0), 30));
         Appointments.add(ExampleAppointment.create("Appointment6", Green, Sally, new LocalTime(12, 30, 0), 40));
+
+        Appointments.add(ExampleAppointment.create("Appointment4", Green, Sally, new LocalTime(8, 45, 0), 120));
+
+        Appointments.add(ExampleAppointment.create("Appointment3", Blue, Sally, new LocalTime(8, 0, 0), 60));
+        Appointments.add(ExampleAppointment.create("Appointment5", Blue, Sally, new LocalTime(10, 45, 0), 30));
         Appointments.add(ExampleAppointment.create("Appointment7", Blue, Freddy, new LocalTime(13, 0, 0), 50));
         Appointments.add(ExampleAppointment.create("Appointment8", Blue, Freddy, Tomorrow, new LocalTime(13, 0, 0), 50));
     }
@@ -68,7 +71,7 @@ public class ExampleScheduleModel extends AbstractScheduleModel
 
     //--------------------------------------------------------------------
     @Override
-    public void visitAppointments(AppointmentVisitor visitor, 
+    public void visitAppointments(AppointmentVisitor visitor,
                                   @NotNull LocalDateTime init,
                                   @NotNull LocalDateTime limit)
     {
@@ -76,7 +79,7 @@ public class ExampleScheduleModel extends AbstractScheduleModel
         {
             if (!isInDateRange(appointment, init, limit))
                 continue;
-            
+
             visitor.visitedAppointment(appointment);
         }
     }
@@ -86,7 +89,7 @@ public class ExampleScheduleModel extends AbstractScheduleModel
     public void visitResources(ResourceVisitor visitor, @NotNull LocalDate limit)
     {
         List<Resource> resources;
-        
+
         if (limit.equals(Today))
         {
             resources = TodayResources;
@@ -144,7 +147,7 @@ public class ExampleScheduleModel extends AbstractScheduleModel
             resources.add(resource);
             index = resources.size() - 1;
         }
-        
+
         else
             resources.add(index, resource);
 

@@ -12,9 +12,11 @@ import java.awt.RenderingHints;
 
 import java.awt.event.MouseEvent;
 import java.awt.geom.Rectangle2D;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Iterator;
+import java.util.List;
 import javax.swing.BorderFactory;
-import org.jetbrains.annotations.NotNull;
 import org.joda.time.Duration;
 import org.joda.time.LocalTime;
 import org.joda.time.Period;
@@ -35,10 +37,12 @@ import org.joda.time.LocalDateTime;
  */
 public class DaySchedule extends ScheduleView
 {
+
     public static final Duration INCREMENTS = Duration.standardMinutes(15);
 
     private Appointment selectedAppointment;
     private Resource selectedResource;
+    private final Comparator<Appointment> byFinishDate;
 
     //--------------------------------------------------------------------
     /**
@@ -51,6 +55,13 @@ public class DaySchedule extends ScheduleView
         setOpaque(true);
         setBorder(BorderFactory.createEtchedBorder());
         addMouseListener(this);
+        byFinishDate = new Comparator<Appointment>()
+        {
+            public int compare(Appointment o1, Appointment o2)
+            {
+                return o1.getDateTime().plus(o1.getDuration()).compareTo(o2.getDateTime().plus(o2.getDuration()));
+            }
+        };
     }
 
     //--------------------------------------------------------------------
@@ -296,7 +307,6 @@ public class DaySchedule extends ScheduleView
             }
         }
     }
-    
 
     //--------------------------------------------------------------------
     public Appointment getSelectedAppointment()
@@ -309,20 +319,20 @@ public class DaySchedule extends ScheduleView
     {
         return selectedResource;
     }
-    
+
     //--------------------------------------------------------------------
     @Override
-    public void setDate (LocalDate value)
+    public void setDate(LocalDate value)
     {
         super.setDate(value);
-        
+
         if (getLayout() instanceof DayScheduleLayout)
         {
             DayScheduleLayout layout = (DayScheduleLayout) getLayout();
             layout.setStartTime(_model.getInitDate());
             layout.setEndTime(_model.getEndDate());
         }
-        
+
     }
 
     //--------------------------------------------------------------------
@@ -330,5 +340,47 @@ public class DaySchedule extends ScheduleView
     LayoutManager instanceNewLayout(ScheduleModel model)
     {
         return new DayScheduleLayout(model.getInitDate(), model.getEndDate());
+    }
+
+    //--------------------------------------------------------------------
+    /**
+     *
+     * @param column
+     */
+    public void autoAdjusting(int column)
+    {
+        if (column >= 0 && column < _model.getResourceCount())
+        {
+            Resource selected = _model.getResourceAt(column);
+            List<Appointment> appointments = new ArrayList<Appointment>();
+            Appointment current;
+            LocalDateTime init_adjust = _model.getInitDate();
+
+            //1.- 
+            for (int i = 0; i < _model.getAppoitmentCount(); i++)
+            {
+                current = _model.getAppointmentAt(i);
+                if (current.getResource() == selected && _model.isInCurrentDateRange(current))
+                    appointments.add(current);
+            }
+
+            //2.- 
+            appointments.sort(byFinishDate);
+            
+            //3.- 
+            for (int j = 0; j < appointments.size(); j++)
+            {
+                current = appointments.get(j);
+                
+                if (current.getDateTime().compareTo(init_adjust) > 0)
+                    current.setDateTime(init_adjust);
+                
+                init_adjust = current.getDateTime().plus(current.getDuration()).plusMinutes(1);
+            }
+            
+            revalidate();
+            
+            repaint();
+        }
     }
 }

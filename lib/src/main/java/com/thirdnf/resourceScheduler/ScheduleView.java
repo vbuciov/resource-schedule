@@ -28,7 +28,6 @@ import javax.swing.JPanel;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joda.time.LocalDate;
-import org.joda.time.LocalDateTime;
 
 /**
  *
@@ -439,8 +438,6 @@ public abstract class ScheduleView extends JPanel implements ScheduleModelListen
         {
             wrapp = addWrapperAndGetResource(_model.getResourceAt(i), i);
 
-            // Force the layout to redraw
-            //revalidate();
             if (wrapp != null)
                 wrapp.repaint();
         }
@@ -564,6 +561,8 @@ public abstract class ScheduleView extends JPanel implements ScheduleModelListen
         if (repaintAll)
             repaint();
     }
+    
+   
 
     //--------------------------------------------------------------------
     /**
@@ -590,5 +589,7 @@ public abstract class ScheduleView extends JPanel implements ScheduleModelListen
 
     //--------------------------------------------------------------------
     abstract Resource getSelectedResource();
-
+    
+    //--------------------------------------------------------------------
+    abstract void autoAdjusting (int column);
 }

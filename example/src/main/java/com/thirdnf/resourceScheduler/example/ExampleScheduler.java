@@ -131,6 +131,17 @@ public class ExampleScheduler extends JFrame
             }
         });
         _popupResourceMenu.add(deleteItem);
+        
+        deleteItem = new JMenuItem("Auto Adjust");
+        deleteItem.addActionListener(new ActionListener()
+        {
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                _scheduler.getCurrentView().autoAdjusting( bsScheduler.indexOf(_scheduler.getSelectedResource()));
+            }
+        });
+        _popupResourceMenu.add(deleteItem);
 
         _scheduler.addScheduleListener(new ScheduleListener()
         {

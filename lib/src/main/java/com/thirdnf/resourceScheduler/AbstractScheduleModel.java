@@ -55,8 +55,8 @@ public abstract class AbstractScheduleModel implements ScheduleModel
          LocalDateTime startDateTime = value.getDateTime();
             LocalDateTime endDateTime = value.getDateTime().plus(value.getDuration());
         
-        return startDateTime.compareTo(getEndDate()) < 0 ||
-                    endDateTime.compareTo(getInitDate()) > 0;
+        return startDateTime.compareTo(getEndDate()) < 0 &&
+                endDateTime.compareTo(getInitDate())>0;
     }
     
      //--------------------------------------------------------------------
@@ -75,7 +75,7 @@ public abstract class AbstractScheduleModel implements ScheduleModel
          LocalDateTime startDateTime = value.getDateTime();
             LocalDateTime endDateTime = value.getDateTime().plus(value.getDuration());
         
-        return startDateTime.compareTo(limit) < 0 ||
+        return startDateTime.compareTo(limit) < 0 &&
                     endDateTime.compareTo(init) > 0;
     }
 
