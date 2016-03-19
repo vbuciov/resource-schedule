@@ -48,7 +48,7 @@ public class DefaultScheduleModel extends AbstractScheduleModel
         {
             if (!isInDateRange(appointment, init, limit))
                 continue;
-            
+
             visitor.visitedAppointment(appointment);
         }
     }
@@ -153,10 +153,24 @@ public class DefaultScheduleModel extends AbstractScheduleModel
     {
         int index = Resources.indexOf(resource);
 
-        //First remove the wrapper component
+        //First remove the RENDER wrapper component
         fireResourcesRemoved(index);
 
-        Resources.remove(index);
+        // Remove it from logical list
+        deleteAppointmentsByResource(Resources.remove(index));
+    }
+
+    //--------------------------------------------------------------------
+    private void deleteAppointmentsByResource(@NotNull Resource resource)
+    {
+        for (int i = 0; i < Appointments.size(); i++)
+        {
+            if (Appointments.get(i).getResource() == resource)
+            {
+                //removes the RENDER component Let any listeners know we have removed this appointment.
+                fireAppointmentsRemoved(i);
+            }
+        }
     }
 
     //--------------------------------------------------------------------
@@ -164,10 +178,10 @@ public class DefaultScheduleModel extends AbstractScheduleModel
     {
         int index = Appointments.indexOf(appointment);
 
-        //First remove the wrapper component
+        //First remove the RENDER wrapper component
         fireAppointmentsRemoved(index);
 
-        // Remove it from our list
+        // Remove it from logical list
         Appointments.remove(index);
     }
 

@@ -328,11 +328,11 @@ public abstract class AbstractAppointmentComponent extends JComponent implements
             _appointment.setResource(resource);
 
         LocalDateTime start_time = layout.getTime(y);
-        LocalDateTime start_datetime = _appointment.getDateTime();
+        //LocalDateTime start_datetime = _appointment.getDateTime();
  
-        _appointment.setDateTime(new LocalDateTime(start_datetime.getYear(),
-                                                   start_datetime.getMonthOfYear(),
-                                                   start_datetime.getDayOfMonth(),
+        _appointment.setDateTime(new LocalDateTime(start_time.getYear(),
+                                                   start_time.getMonthOfYear(),
+                                                   start_time.getDayOfMonth(),
                                                    start_time.getHourOfDay(),
                                                    start_time.getMinuteOfHour(),
                                                    start_time.getSecondOfMinute()));

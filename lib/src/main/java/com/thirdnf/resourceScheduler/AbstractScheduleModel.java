@@ -48,19 +48,18 @@ public abstract class AbstractScheduleModel implements ScheduleModel
         this.start = start;
         this.end = end;
     }
-    
+
     //--------------------------------------------------------------------
-    public boolean isInCurrentDateRange (Appointment value)
+    public boolean isInCurrentDateRange(Appointment value)
     {
-         LocalDateTime startDateTime = value.getDateTime();
-            LocalDateTime endDateTime = value.getDateTime().plus(value.getDuration());
-        
-        return startDateTime.compareTo(getEndDate()) < 0 &&
-                endDateTime.compareTo(getInitDate())>0;
+        LocalDateTime startDateTime = value.getDateTime();
+        LocalDateTime endDateTime = value.getDateTime().plus(value.getDuration());
+
+        return startDateTime.compareTo(getEndDate()) < 0
+                && endDateTime.compareTo(getInitDate()) > 0;
     }
-    
+
      //--------------------------------------------------------------------
- 
     /**
      *
      * @param value The appointment
@@ -68,15 +67,15 @@ public abstract class AbstractScheduleModel implements ScheduleModel
      * @param limit The limit Date Time
      * @return
      */
-        public boolean isInDateRange (Appointment value, 
-                                  LocalDateTime init,
-                                   LocalDateTime limit)
+    public boolean isInDateRange(Appointment value,
+                                 LocalDateTime init,
+                                 LocalDateTime limit)
     {
-         LocalDateTime startDateTime = value.getDateTime();
-            LocalDateTime endDateTime = value.getDateTime().plus(value.getDuration());
-        
-        return startDateTime.compareTo(limit) < 0 &&
-                    endDateTime.compareTo(init) > 0;
+        LocalDateTime startDateTime = value.getDateTime();
+        LocalDateTime endDateTime = value.getDateTime().plus(value.getDuration());
+
+        return startDateTime.compareTo(limit) < 0
+                && endDateTime.compareTo(init) > 0;
     }
 
     //--------------------------------------------------------------------
@@ -404,6 +403,24 @@ public abstract class AbstractScheduleModel implements ScheduleModel
 
     //--------------------------------------------------------------------
     /**
+     * Only propagate the changes whitout notify repaint.
+     * @param source The Modify Appointment.
+     */
+    public void justNotifyAppointmentUpdated(Appointment source)
+    {
+        // Guaranteed to return a non-null array
+        Object[] listeners = _listenerList.getListenerList();
+        // Process the listeners last to first, notifying
+        // those that are interested in this event
+        for (int i = listeners.length - 2; i >= 0; i -= 2)
+        {
+            if (listeners[i] == AppointmentChangeListener.class)
+                fireAppointmentInternalUpdate(source, (AppointmentChangeListener) listeners[i + 1]);
+        }
+    }
+
+    //--------------------------------------------------------------------
+    /**
      * Report a event related with Resources
      *
      * @param e The event information
@@ -457,6 +474,18 @@ public abstract class AbstractScheduleModel implements ScheduleModel
 
             }
         }
+    }
+
+    //---------------------------------------------------------------------
+    /**
+     * Reports to listener only the Appointment Update to listener.
+     *
+     * @param source The Appointment Changed
+     * @param listener The listener of this changed.
+     */
+    protected void fireAppointmentInternalUpdate(Appointment source, AppointmentChangeListener listener)
+    {
+        listener.appointmentUpdated(source);
     }
 
     //--------------------------------------------------------------------

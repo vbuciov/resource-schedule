@@ -42,7 +42,7 @@ public class DaySchedule extends ScheduleView
 
     private Appointment selectedAppointment;
     private Resource selectedResource;
-    private final Comparator<Appointment> byFinishDate;
+    private final Comparator<Appointment> byStartDate;
 
     //--------------------------------------------------------------------
     /**
@@ -55,11 +55,18 @@ public class DaySchedule extends ScheduleView
         setOpaque(true);
         setBorder(BorderFactory.createEtchedBorder());
         addMouseListener(this);
-        byFinishDate = new Comparator<Appointment>()
+        byStartDate = new Comparator<Appointment>()
         {
             public int compare(Appointment o1, Appointment o2)
             {
-                return o1.getDateTime().plus(o1.getDuration()).compareTo(o2.getDateTime().plus(o2.getDuration()));
+                /*int byfinish, bystart;
+                
+                byfinish = o1.getDateTime().plus(o1.getDuration()).compareTo(o2.getDateTime().plus(o2.getDuration()));
+                bystart = o1.getDateTime().compareTo(o2.getDateTime());
+                
+                return  byfinish > 0 && bystart > 0? 1: byfinish < 0 && bystart < 0? -1: bystart > 0? 1: byfinish > 0? 1: bystart <0 ? -1 : byfinish< 0?-1:0;*/
+                
+                return o1.getDateTime().compareTo(o2.getDateTime());
             }
         };
     }
@@ -365,19 +372,25 @@ public class DaySchedule extends ScheduleView
             }
 
             //2.- 
-            appointments.sort(byFinishDate);
+            appointments.sort(byStartDate);
             
             //3.- 
             for (int j = 0; j < appointments.size(); j++)
             {
                 current = appointments.get(j);
                 
-                if (current.getDateTime().compareTo(init_adjust) > 0)
+                if (current.getDateTime().compareTo(_model.getInitDate()) > 0)
                     current.setDateTime(init_adjust);
                 
                 init_adjust = current.getDateTime().plus(current.getDuration()).plusMinutes(1);
+                
+                //If there's listener interesting in changes, we notify but don't repaint yet
+                if (_model instanceof AbstractScheduleModel)
+                    ((AbstractScheduleModel)_model).justNotifyAppointmentUpdated(current);
             }
             
+            
+            //So many appointments change, so we need to repaint.
             revalidate();
             
             repaint();

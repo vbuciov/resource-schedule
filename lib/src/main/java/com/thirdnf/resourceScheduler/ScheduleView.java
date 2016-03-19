@@ -542,8 +542,7 @@ public abstract class ScheduleView extends JPanel implements ScheduleModelListen
             Component component = getAppointmentComponent(actual);
             if (component != null)
             {
-                if (actual.getDateTime().toLocalDate().isEqual(_model.getCurrentDate()) ||
-                        actual.getDateTime().plus(actual.getDuration().toPeriod()).toLocalDate().isEqual(_model.getCurrentDate()))
+                if (_model.isInCurrentDateRange(actual))
                     component.repaint();
 
                 else

@@ -418,12 +418,12 @@ public class DayScheduleLayout implements LayoutManager2
     {
         Appointment appointment = wrap.getAppointment();
         LocalDateTime startDate = appointment.getDateTime();
-        boolean same_day = _startTime.compareTo(startDate) <= 0;
-        Duration duration = same_day?appointment.getDuration(): 
+       // boolean same_day = _startTime.compareTo(startDate) <= 0;
+        Duration duration = appointment.getDuration();/*same_day?appointment.getDuration(): 
                 appointment.getDuration().minus(
-                Period.fieldDifference(startDate, _endTime.minusDays(1)).toStandardDuration());
+                Period.fieldDifference(startDate, _endTime.minusDays(1)).toStandardDuration());*/
         
-        int y = same_day ? getY(startDate) : getY(_startTime);
+        int y = getY(startDate); /*same_day ? getY(startDate) : getY(_startTime) */
         int appointmentWidth = (int) _columnWidth;
         int appointmentHeight = (int) Math.floor(_scale * duration.getStandardSeconds());
 

@@ -209,8 +209,25 @@ public class ExampleScheduleModel extends AbstractScheduleModel
         }
 
         int index = resources.indexOf(resource);
-        resources.remove(index);
+    
+        //Removes from RENDER elements
         fireResourcesRemoved(index);
+        
+        //Remove from the logical list.
+        deleteAppointmentsByResource(resources.remove(index));
+    }
+    
+    //--------------------------------------------------------------------
+    private void deleteAppointmentsByResource (@NotNull Resource resource)
+    {
+        for (int i = 0; i < Appointments.size(); i++)
+        {
+            if (Appointments.get(i).getResource() == resource)
+            {
+                //removes the RENDER component Let any listeners know we have removed this appointment.
+                fireAppointmentsRemoved(i);
+            }
+        }
     }
 
     //--------------------------------------------------------------------
@@ -221,7 +238,7 @@ public class ExampleScheduleModel extends AbstractScheduleModel
         // First remove the RENDER component Let any listeners know we have removed this appointment.
         fireAppointmentsRemoved(index);
 
-        // Remove it from our list
+         //Remove from the logical list.
         Appointments.remove(index);
     }
 
