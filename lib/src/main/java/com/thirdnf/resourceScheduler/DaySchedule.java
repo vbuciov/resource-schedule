@@ -336,8 +336,7 @@ public class DaySchedule extends ScheduleView
         if (getLayout() instanceof DayScheduleLayout)
         {
             DayScheduleLayout layout = (DayScheduleLayout) getLayout();
-            layout.setStartTime(_model.getInitDate());
-            layout.setEndTime(_model.getEndDate());
+            layout.setRangeTime(_model.getInitDate(), _model.getEndDate());
         }
 
     }

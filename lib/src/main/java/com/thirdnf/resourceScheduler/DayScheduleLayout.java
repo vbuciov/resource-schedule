@@ -93,7 +93,7 @@ public class DayScheduleLayout implements LayoutManager2
     }
 
     //--------------------------------------------------------------------
-    private void setRangeTime(LocalDateTime start, LocalDateTime end)
+    public void setRangeTime(LocalDateTime start, LocalDateTime end)
     {
         _startTime = start;
         _endTime = end;
@@ -480,9 +480,11 @@ public class DayScheduleLayout implements LayoutManager2
      */
     public int getY(@NotNull LocalDateTime time)
     {
+        int days =  time.getDayOfYear() - _startTime.getDayOfYear() ;
+        long aditional = days * _totalSeconds;
         // Get the seconds which have passed from the start time to the time they are asking about.
-        long seconds
-                = Period.fieldDifference(_startTime, time).toStandardDuration().getStandardSeconds();
+          long seconds
+                = Period.fieldDifference(_startTime.toLocalTime(), time.toLocalTime()).toStandardDuration().getStandardSeconds() + aditional;
 
         return _top + _topHeader + (int) (_scale * seconds);
     }
