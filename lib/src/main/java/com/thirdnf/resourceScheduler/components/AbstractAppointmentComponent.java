@@ -349,7 +349,12 @@ public abstract class AbstractAppointmentComponent extends JComponent implements
         LocalDateTime end_datetime = _appointment.getDateTime().plus(_appointment.getDuration().toPeriod());
         
         _appointment.setDateTime(new_time);
-        _appointment.setDuration(Period.fieldDifference(new_time, end_datetime).toStandardDuration());
+        
+         int days =  end_datetime.getDayOfYear() - new_time.getDayOfYear();
+        long aditional = days * layout.getTotalSeconds();
+        
+        _appointment.setDuration(Period.fieldDifference(new_time.toLocalTime(), 
+                                                        end_datetime.toLocalTime()).plusSeconds((int) aditional).toStandardDuration());
         
         if (container.getModel() instanceof AbstractScheduleModel)
             ((AbstractScheduleModel) container.getModel()).fireAppointmentsUpdated(container.getModel().indexOf(_appointment));
@@ -366,7 +371,8 @@ public abstract class AbstractAppointmentComponent extends JComponent implements
         int days = new_time.getDayOfYear() - start_datetime.getDayOfYear();
         long aditional = days * layout.getTotalSeconds();
         
-        _appointment.setDuration(Period.fieldDifference(start_datetime.toLocalTime(), new_time.toLocalTime()).plusSeconds((int) aditional).toStandardDuration());
+        _appointment.setDuration(Period.fieldDifference(start_datetime.toLocalTime(), 
+                                                        new_time.toLocalTime()).plusSeconds((int) aditional).toStandardDuration());
         
         if (container.getModel() instanceof AbstractScheduleModel)
             ((AbstractScheduleModel) container.getModel()).fireAppointmentsUpdated(container.getModel().indexOf(_appointment));
