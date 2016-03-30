@@ -199,6 +199,13 @@ public class DayScheduleLayout implements LayoutManager2
         this.vgap = vgap;
     }
 
+    public long getTotalSeconds()
+    {
+        return _totalSeconds;
+    }
+    
+    
+
     //--------------------------------------------------------------------
     /**
      * Invalidates the layout, indicating that if the layout manager has cached

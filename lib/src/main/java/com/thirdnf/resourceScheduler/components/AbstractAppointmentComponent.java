@@ -30,11 +30,11 @@ import org.joda.time.Period;
  */
 public abstract class AbstractAppointmentComponent extends JComponent implements MouseInputListener
 {
-
+    
     private MouseListener inputListener;
     protected final Appointment _appointment;
     private int cursor;
-
+    
     private int amountPixels;
     private Point startPoint = null;
     private boolean dragged;
@@ -98,7 +98,7 @@ public abstract class AbstractAppointmentComponent extends JComponent implements
         startPoint = e.getPoint();
         setCursor(Cursor.getPredefinedCursor(cursor));
         requestFocus();
-
+        
         inputListener.mousePressed(e);
     }
 
@@ -128,7 +128,7 @@ public abstract class AbstractAppointmentComponent extends JComponent implements
     @Override
     public final void mouseDragged(MouseEvent e)
     {
-
+        
         if (startPoint != null)
         {
             dragged = true;
@@ -158,7 +158,7 @@ public abstract class AbstractAppointmentComponent extends JComponent implements
     {
         if (!isDragged())
             setCursor(Cursor.getDefaultCursor());
-
+        
         inputListener.mouseExited(e);
     }
 
@@ -173,17 +173,17 @@ public abstract class AbstractAppointmentComponent extends JComponent implements
             int y = getY();
             int w = getWidth();
             int h = getHeight();
-
+            
             int dx = me.getX() - startPoint.x;
             int dy = me.getY() - startPoint.y;
-
+            
             switch (cursor)
             {
                 case Cursor.N_RESIZE_CURSOR:
                     if (!(h - dy < amountPixels) && y + dy >= layout.getTopHeader() + container.getInsets().top)
                         setBounds(x, y + dy, w, h - dy);
                     break;
-
+                
                 case Cursor.S_RESIZE_CURSOR:
                     if (!(h + dy < amountPixels) && y + h + dy <= layout.getHeight() + 1)
                     {
@@ -191,14 +191,14 @@ public abstract class AbstractAppointmentComponent extends JComponent implements
                         startPoint = me.getPoint();
                     }
                     break;
-
+                
                 case Cursor.W_RESIZE_CURSOR:
                     if (!(w - dx < amountPixels))
                     {
                         //setBounds(x + dx, y, w - dx, h); is not posible
                     }
                     break;
-
+                
                 case Cursor.E_RESIZE_CURSOR:
                     if (!(w + dx < amountPixels))
                     {
@@ -206,14 +206,14 @@ public abstract class AbstractAppointmentComponent extends JComponent implements
                          startPoint = me.getPoint(); is not posible*/
                     }
                     break;
-
+                
                 case Cursor.NW_RESIZE_CURSOR:
                     if (!(w - dx < amountPixels) && !(h - dy < amountPixels))
                     {
                         // setBounds(x + dx, y + dy, w - dx, h - dy); is not posible
                     }
                     break;
-
+                
                 case Cursor.NE_RESIZE_CURSOR:
                     if (!(w + dx < amountPixels) && !(h - dy < amountPixels))
                     {
@@ -221,7 +221,7 @@ public abstract class AbstractAppointmentComponent extends JComponent implements
                          startPoint = new Point(me.getX(), startPoint.y); is not posible*/
                     }
                     break;
-
+                
                 case Cursor.SW_RESIZE_CURSOR:
                     if (!(w - dx < amountPixels) && !(h + dy < amountPixels))
                     {
@@ -229,7 +229,7 @@ public abstract class AbstractAppointmentComponent extends JComponent implements
                          startPoint = new Point(startPoint.x, me.getY()); is not posible*/
                     }
                     break;
-
+                
                 case Cursor.SE_RESIZE_CURSOR:
                     if (!(w + dx < amountPixels) && !(h + dy < amountPixels))
                     {
@@ -237,7 +237,7 @@ public abstract class AbstractAppointmentComponent extends JComponent implements
                          startPoint = me.getPoint();is not posible*/
                     }
                     break;
-
+                
                 case Cursor.MOVE_CURSOR:
                     if (y + dy >= layout.getTopHeader() + container.getInsets().top && y + h + dy <= layout.getHeight() + 1)
                     {
@@ -260,41 +260,41 @@ public abstract class AbstractAppointmentComponent extends JComponent implements
             int y = getY();
             //int w = getWidth();
             int h = getHeight();
-
+            
             switch (cursor)
             {
                 case Cursor.N_RESIZE_CURSOR:
                     componentResizedNorth(y, container);
                     break;
-
+                
                 case Cursor.S_RESIZE_CURSOR:
                     componentResizedSouth(y + h, container);
                     break;
-
+                
                 case Cursor.W_RESIZE_CURSOR:
                     /* TODO */
                     break;
-
+                
                 case Cursor.E_RESIZE_CURSOR:
                     /* TODO */
                     break;
-
+                
                 case Cursor.NW_RESIZE_CURSOR:
                     /* TODO */
                     break;
-
+                
                 case Cursor.NE_RESIZE_CURSOR:
                     /* TODO */
                     break;
-
+                
                 case Cursor.SW_RESIZE_CURSOR:
                     /* TODO */
                     break;
-
+                
                 case Cursor.SE_RESIZE_CURSOR:
                     /* TODO */
                     break;
-
+                
                 case Cursor.MOVE_CURSOR:
                     componentMoved(x, y, container);
                     break;
@@ -302,7 +302,7 @@ public abstract class AbstractAppointmentComponent extends JComponent implements
 
             //container.revalidate(); The container going to revalidate, when updated notify
         }
-
+        
     }
 
     //--------------------------------------------------------------------
@@ -326,17 +326,17 @@ public abstract class AbstractAppointmentComponent extends JComponent implements
         //Change of resource
         if (resource != null && _appointment.getResource() != resource)
             _appointment.setResource(resource);
-
+        
         LocalDateTime start_time = layout.getTime(y);
         //LocalDateTime start_datetime = _appointment.getDateTime();
- 
+        
         _appointment.setDateTime(new LocalDateTime(start_time.getYear(),
                                                    start_time.getMonthOfYear(),
                                                    start_time.getDayOfMonth(),
                                                    start_time.getHourOfDay(),
                                                    start_time.getMinuteOfHour(),
                                                    start_time.getSecondOfMinute()));
-
+        
         if (container.getModel() instanceof AbstractScheduleModel)
             ((AbstractScheduleModel) container.getModel()).fireAppointmentsUpdated(container.getModel().indexOf(_appointment));
     }
@@ -347,13 +347,13 @@ public abstract class AbstractAppointmentComponent extends JComponent implements
         DayScheduleLayout layout = (DayScheduleLayout) container.getLayout();
         LocalDateTime new_time = layout.getTime(y);
         LocalDateTime end_datetime = _appointment.getDateTime().plus(_appointment.getDuration().toPeriod());
-     
+        
         _appointment.setDateTime(new_time);
         _appointment.setDuration(Period.fieldDifference(new_time, end_datetime).toStandardDuration());
-
+        
         if (container.getModel() instanceof AbstractScheduleModel)
             ((AbstractScheduleModel) container.getModel()).fireAppointmentsUpdated(container.getModel().indexOf(_appointment));
-
+        
     }
 
     //--------------------------------------------------------------------
@@ -363,8 +363,11 @@ public abstract class AbstractAppointmentComponent extends JComponent implements
         LocalDateTime start_datetime = _appointment.getDateTime();
         LocalDateTime new_time = layout.getTime(y);
         
-        _appointment.setDuration(Period.fieldDifference(start_datetime, new_time).toStandardDuration());
-
+        int days = new_time.getDayOfYear() - start_datetime.getDayOfYear();
+        long aditional = days * layout.getTotalSeconds();
+        
+        _appointment.setDuration(Period.fieldDifference(start_datetime.toLocalTime(), new_time.toLocalTime()).plusSeconds((int) aditional).toStandardDuration());
+        
         if (container.getModel() instanceof AbstractScheduleModel)
             ((AbstractScheduleModel) container.getModel()).fireAppointmentsUpdated(container.getModel().indexOf(_appointment));
     }
